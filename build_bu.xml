@@ -1,0 +1,129 @@
+<project name="SFDebug">
+	<target name="rebuild">
+		<delete dir="c:/SFDebug/lib" />
+
+		<mkdir dir="c:/SFDebug/lib" />
+
+		<copy todir="c:/SFDebug/lib">
+			<fileset
+				dir="c:/github/liferay-portal/portal-impl"
+				includes="portal-impl.jar"
+			/>
+		</copy>
+
+		<copy todir="c:/SFDebug/lib">
+			<fileset
+				dir="c:/github/liferay-portal/portal-kernel"
+				includes="portal-kernel.jar"
+			/>
+		</copy>
+
+		<copy todir="c:/SFDebug/lib">
+			<fileset
+				dir="c:/github/liferay-portal/util-java"
+				includes="util-java.jar"
+			/>
+		</copy>
+
+		<copy todir="c:/SFDebug/lib">
+			<fileset
+				dir="c:/github/liferay-portal/lib/portal"
+				includes="bnd.jar,jaxen.jar,xml-apis.jar"
+			/>
+		</copy>
+
+		<copy todir="c:/SFDebug/lib">
+			<fileset
+				dir="c:/github/liferay-portal/lib/development"
+				includes="qdox.jar"
+			/>
+		</copy>
+
+		<delete dir="c:/SFDebug/src/com/liferay/source" />
+
+		<mkdir dir="c:/SFDebug/src/com/liferay/source" />
+
+		<copy todir="c:/SFDebug/src/com/liferay/source">
+			<fileset dir="c:/github/liferay-portal/modules/util/source-formatter/src/main/java/com/liferay/source" />
+		</copy>
+
+		<copy todir="c:/SFDebug/bin">
+			<fileset
+				dir="c:/github/liferay-portal/modules/util/source-formatter/src/main/resources"
+				includes="checkstyle.xml,suppressions_1_1.dtd,sourcechecks.xml"
+			/>
+		</copy>
+
+		<copy todir="c:/SFDebug/bin/dependencies">
+			<fileset
+				dir="c:/github/liferay-portal/modules/util/source-formatter/src/main/resources/dependencies"
+				includes="copyright.txt"
+			/>
+		</copy>
+
+		<delete dir="c:/SFDebug/src/com/liferay/source/formatter/maven" />
+	</target>
+
+	<target name="rebuild70">
+		<delete dir="c:/SFDebug/lib" />
+
+		<mkdir dir="c:/SFDebug/lib" />
+
+		<copy todir="c:/SFDebug/lib">
+			<fileset
+				dir="c:/github/liferay-portal-ee-7.0.x/portal-impl"
+				includes="portal-impl.jar"
+			/>
+		</copy>
+
+		<copy todir="c:/SFDebug/lib">
+			<fileset
+				dir="c:/github/liferay-portal-ee-7.0.x/portal-kernel"
+				includes="portal-kernel.jar"
+			/>
+		</copy>
+
+		<copy todir="c:/SFDebug/lib">
+			<fileset
+				dir="c:/github/liferay-portal-ee-7.0.x/util-java"
+				includes="util-java.jar"
+			/>
+		</copy>
+
+		<copy todir="c:/SFDebug/lib">
+			<fileset
+				dir="c:/github/liferay-portal-ee-7.0.x/lib/portal"
+				includes="ant.jar,commons-io.jar,dom4j.jar,jaxen.jar,xercesImpl.jar,xml-apis.jar"
+			/>
+		</copy>
+
+		<copy todir="c:/SFDebug/lib">
+			<fileset
+				dir="c:/github/liferay-portal-ee-7.0.x/lib/development"
+				includes="qdox.jar"
+			/>
+		</copy>
+
+		<delete dir="c:/SFDebug/src/com/liferay/source" />
+
+		<mkdir dir="c:/SFDebug/src/com/liferay/source" />
+
+		<copy todir="c:/SFDebug/src/com/liferay/source">
+			<fileset dir="c:/github/liferay-portal-ee-7.0.x/modules/util/source-formatter/src/main/java/com/liferay/source" />
+		</copy>
+
+		<delete dir="c:/SFDebug/src/com/liferay/source/formatter/maven" />
+	</target>
+
+	<target name="upload">
+		<copy overwrite="true" todir="c:/github/liferay-portal/modules/util/source-formatter/src/main/java/com/liferay/source">
+			<fileset dir="c:/SFDebug/src/com/liferay/source" />
+		</copy>
+	</target>
+
+	<target name="upload70">
+		<copy overwrite="true" todir="c:/github/liferay-portal-ee-7.0.x/modules/util/source-formatter/src/main/java/com/liferay/source">
+			<fileset dir="c:/SFDebug/src/com/liferay/source" />
+		</copy>
+	</target>
+</project>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/ant.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/bnd.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/checkstyle-8.11.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/checkstyle-8.11-all.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/com.liferay.petra.concurrent-1.0.2.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/com.liferay.petra.lang-1.1.1.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/com.liferay.petra.memory-1.0.2.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/com.liferay.petra.nio-1.0.3.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/com.liferay.petra.string.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/com.liferay.petra.xml-1.0.9.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/commons-beanutils-1.9.3.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/commons-io-2.2.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/commons-logging-1.2.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/diffutils-1.3.0.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/guava-23.0.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/json-20180130.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/jsqlparser-1.1.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/junit.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/maven-artifact-3.3.9.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/oasis.names.tc.wsrp-1.0.1.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/portal-impl.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/portal-kernel.jar" sourcepath="/portal-master/portal-kernel"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/qdox-2.0-M5.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/util-java.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/util-java.zip"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/xercesImpl-2.11.0.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

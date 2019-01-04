@@ -1,0 +1,34 @@
+<project name="SFDebug">
+	<target name="rebuild">
+		<delete dir="/home/alan/SFDebug/src/com/liferay/source" />
+
+		<mkdir dir="/home/alan/SFDebug/src/com/liferay/source" />
+
+		<copy todir="/home/alan/SFDebug/src/com/liferay/source">
+			<fileset dir="/home/alan/liferay_code/master/liferay-portal/modules/util/source-formatter/src/main/java/com/liferay/source" />
+		</copy>
+
+		<copy todir="/home/alan/SFDebug/bin">
+			<fileset
+				dir="/home/alan/liferay_code/master/liferay-portal/modules/util/source-formatter/src/main/resources"
+				includes="checkstyle.xml,checkstyle-alloy-mvc.xml,suppressions_1_1.dtd,sourcechecks.xml"
+			/>
+		</copy>
+
+		<copy todir="/home/alan/SFDebug/bin/dependencies">
+			<fileset
+				dir="/home/alan/liferay_code/master/liferay-portal/modules/util/source-formatter/src/main/resources/dependencies"
+				includes="copyright.txt,copyright-commercial.txt"
+			/>
+		</copy>
+
+		<delete dir="/home/alan/SFDebug/src/com/liferay/source/formatter/maven" />
+	</target>
+
+	<target name="upload">
+		<copy overwrite="true" todir="/home/alan/liferay_code/master/liferay-portal/modules/util/source-formatter/src/main/java/com/liferay/source">
+			<fileset dir="/home/alan/SFDebug/src/com/liferay/source" />
+		</copy>
+	</target>
+
+</project>

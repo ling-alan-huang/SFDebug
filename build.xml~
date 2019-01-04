@@ -1,0 +1,51 @@
+<project name="SFDebug">
+	<target name="rebuild">
+		<delete dir="c:/SFDebug/src/com/liferay/source" />
+
+		<mkdir dir="c:/SFDebug/src/com/liferay/source" />
+
+		<copy todir="c:/SFDebug/src/com/liferay/source">
+			<fileset dir="c:/github/liferay-portal/modules/util/source-formatter/src/main/java/com/liferay/source" />
+		</copy>
+
+		<copy todir="c:/SFDebug/bin">
+			<fileset
+				dir="c:/github/liferay-portal/modules/util/source-formatter/src/main/resources"
+				includes="checkstyle.xml,checkstyle-alloy-mvc.xml,suppressions_1_1.dtd,sourcechecks.xml"
+			/>
+		</copy>
+
+		<copy todir="c:/SFDebug/bin/dependencies">
+			<fileset
+				dir="c:/github/liferay-portal/modules/util/source-formatter/src/main/resources/dependencies"
+				includes="copyright.txt,copyright-commercial.txt"
+			/>
+		</copy>
+
+		<delete dir="c:/SFDebug/src/com/liferay/source/formatter/maven" />
+	</target>
+
+	<target name="rebuild70">
+		<delete dir="c:/SFDebug/src/com/liferay/source" />
+
+		<mkdir dir="c:/SFDebug/src/com/liferay/source" />
+
+		<copy todir="c:/SFDebug/src/com/liferay/source">
+			<fileset dir="c:/github/liferay-portal-ee-7.0.x/modules/util/source-formatter/src/main/java/com/liferay/source" />
+		</copy>
+
+		<delete dir="c:/SFDebug/src/com/liferay/source/formatter/maven" />
+	</target>
+
+	<target name="upload">
+		<copy overwrite="true" todir="c:/github/liferay-portal/modules/util/source-formatter/src/main/java/com/liferay/source">
+			<fileset dir="c:/SFDebug/src/com/liferay/source" />
+		</copy>
+	</target>
+
+	<target name="upload70">
+		<copy overwrite="true" todir="c:/github/liferay-portal-ee-7.0.x/modules/util/source-formatter/src/main/java/com/liferay/source">
+			<fileset dir="c:/SFDebug/src/com/liferay/source" />
+		</copy>
+	</target>
+</project>
