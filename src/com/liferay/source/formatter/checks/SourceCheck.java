@@ -14,14 +14,11 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.source.formatter.SourceFormatterExcludes;
 import com.liferay.source.formatter.SourceFormatterMessage;
 
-import com.puppycrawl.tools.checkstyle.api.Configuration;
-
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -32,20 +29,19 @@ public interface SourceCheck {
 	public Set<SourceFormatterMessage> getSourceFormatterMessages(
 		String fileName);
 
-	public boolean isEnabled();
+	public boolean isEnabled(String absolutePath);
 
-	public boolean isModulesCheck();
+	public boolean isLiferaySourceCheck();
 
-	public boolean isPortalCheck();
+	public boolean isModuleSourceCheck();
 
 	public void setAllFileNames(List<String> allFileNames);
 
+	public void setAttributes(String attributes) throws JSONException;
+
 	public void setBaseDirName(String baseDirName);
 
-	public void setCheckstyleConfiguration(
-		Configuration checkstyleConfiguration);
-
-	public void setEnabled(boolean enabled);
+	public void setExcludes(String excludes) throws JSONException;
 
 	public void setFileExtensions(List<String> fileExtenstions);
 
@@ -57,8 +53,6 @@ public interface SourceCheck {
 	public void setPortalSource(boolean portalSource);
 
 	public void setProjectPathPrefix(String projectPathPrefix);
-
-	public void setPropertiesMap(Map<String, Properties> propertiesMap);
 
 	public void setSourceFormatterExcludes(
 		SourceFormatterExcludes sourceFormatterExcludes);

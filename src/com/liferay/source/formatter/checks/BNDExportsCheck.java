@@ -15,9 +15,9 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.checks.util.BNDSourceUtil;
@@ -28,7 +28,6 @@ import java.io.FileFilter;
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,16 +38,8 @@ import java.util.regex.Pattern;
 public class BNDExportsCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isModulesCheck() {
+	public boolean isModuleSourceCheck() {
 		return true;
-	}
-
-	public void setAllowedExportPackageDirNames(
-		String allowedExportPackageDirNames) {
-
-		Collections.addAll(
-			_allowedExportPackageDirNames,
-			StringUtil.split(allowedExportPackageDirNames));
 	}
 
 	@Override
@@ -80,8 +71,11 @@ public class BNDExportsCheck extends BaseFileCheck {
 	private void _checkExportPackage(
 		String fileName, String absolutePath, String content) {
 
+		List<String> allowedExportPackageDirNames = getAttributeValues(
+			_ALLOWED_EXPORT_PACKAGE_DIR_NAMES_KEY, absolutePath);
+
 		for (String allowedExportPackageDirName :
-				_allowedExportPackageDirNames) {
+				allowedExportPackageDirNames) {
 
 			if (absolutePath.contains(allowedExportPackageDirName)) {
 				return;
@@ -89,7 +83,9 @@ public class BNDExportsCheck extends BaseFileCheck {
 		}
 
 		if (fileName.endsWith("/test-bnd.bnd") ||
-			absolutePath.contains("-api/") || absolutePath.contains("-spi/") ||
+			absolutePath.contains("-api/") ||
+			absolutePath.contains("-client/") ||
+			absolutePath.contains("-spi/") ||
 			absolutePath.contains("-taglib/") ||
 			absolutePath.contains("-test-util/") ||
 			!content.contains("Export-Package")) {
@@ -149,6 +145,12 @@ public class BNDExportsCheck extends BaseFileCheck {
 
 					@Override
 					public boolean accept(File pathname) {
+						String fileName = pathname.getName();
+
+						if (fileName.startsWith(".lfrbuild-")) {
+							return false;
+						}
+
 						return pathname.isFile();
 					}
 
@@ -237,6 +239,9 @@ public class BNDExportsCheck extends BaseFileCheck {
 		}
 	}
 
+	private static final String _ALLOWED_EXPORT_PACKAGE_DIR_NAMES_KEY =
+		"allowedExportPackageDirNames";
+
 	private static final Pattern _apiOrServiceBundleSymbolicNamePattern =
 		Pattern.compile("\\.(api|service)$");
 	private static final Pattern _exportContentsPattern = Pattern.compile(
@@ -245,8 +250,5 @@ public class BNDExportsCheck extends BaseFileCheck {
 	private static final Pattern _exportsPattern = Pattern.compile(
 		"\nExport-Package:(\\\\\n| )((.*?)(\n[^\t]|\\Z))",
 		Pattern.DOTALL | Pattern.MULTILINE);
-
-	private final List<String> _allowedExportPackageDirNames =
-		new ArrayList<>();
 
 }

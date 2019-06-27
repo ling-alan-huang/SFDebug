@@ -15,8 +15,8 @@
 package com.liferay.source.formatter.parser;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.JavaImportsFormatter;
@@ -184,7 +184,7 @@ public class JavaClassParser {
 
 		String s = StringUtil.trim(content.substring(x + 1));
 
-		if (!s.startsWith("{\n\n")) {
+		if (!s.startsWith("{\n")) {
 			return null;
 		}
 
@@ -354,7 +354,9 @@ public class JavaClassParser {
 		while (matcher.find()) {
 			String javaTermContent = s.substring(0, matcher.end());
 
-			if (ToolsUtil.getLevel(javaTermContent, "{", "}") == 0) {
+			if ((ToolsUtil.getLevel(javaTermContent, "(", ")") == 0) &&
+				(ToolsUtil.getLevel(javaTermContent, "{", "}") == 0)) {
+
 				return lineNumber + StringUtil.count(javaTermContent, "\n") - 1;
 			}
 		}

@@ -15,8 +15,8 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
@@ -27,7 +27,9 @@ import java.io.Serializable;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,42 +44,47 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 	protected String doProcess(
 		String fileName, String absolutePath, String content) {
 
-		List<String> blocks = GradleSourceUtil.getDependenciesBlocks(content);
+		List<String> dependenciesBlocks =
+			GradleSourceUtil.getDependenciesBlocks(content);
 
-		for (String dependencies : blocks) {
-			content = _formatDependencies(content, dependencies);
+		for (String dependenciesBlock : dependenciesBlocks) {
+			int x = dependenciesBlock.indexOf("\n");
+			int y = dependenciesBlock.lastIndexOf("\n");
+
+			if (x == y) {
+				continue;
+			}
+
+			String dependencies = dependenciesBlock.substring(x, y + 1);
+
+			content = _formatDependencies(
+				content, SourceUtil.getIndent(dependenciesBlock), dependencies);
+
+			if (isAttributeValue(_CHECK_PETRA_DEPENDENCIES_KEY, absolutePath) &&
+				absolutePath.contains("/modules/core/petra/")) {
+
+				_checkPetraDependencies(fileName, content, dependencies);
+			}
 		}
 
 		return content;
 	}
 
-	private static boolean _hasPatchedOSGiCore(Set<String> dependencies) {
-		if (!dependencies.contains(
-				_ORG_ECLIPSE_OSGI_3_13_0_LIFERAY_PATCHED_1)) {
+	private void _checkPetraDependencies(
+		String fileName, String content, String dependencies) {
 
-			return false;
+		for (String line : StringUtil.splitLines(dependencies)) {
+			if (Validator.isNotNull(line) && !line.contains("petra")) {
+				addMessage(
+					fileName,
+					"Only modules/core/petra dependencies are allowed",
+					SourceUtil.getLineNumber(content, content.indexOf(line)));
+			}
 		}
-
-		if (!dependencies.contains(_OSGI_CORE_6_0_0_DEPENDENCY) &&
-			!dependencies.contains(_ORG_OSGI_CORE_6_0_0_DEPENDENCY)) {
-
-			return false;
-		}
-
-		return true;
 	}
 
-	private String _formatDependencies(String content, String dependencies) {
-		String indent = SourceUtil.getIndent(dependencies);
-
-		int x = dependencies.indexOf("\n");
-		int y = dependencies.lastIndexOf("\n");
-
-		if (x == y) {
-			return content;
-		}
-
-		dependencies = dependencies.substring(x, y + 1);
+	private String _formatDependencies(
+		String content, String indent, String dependencies) {
 
 		Matcher matcher = _incorrectWhitespacePattern.matcher(dependencies);
 
@@ -126,17 +133,7 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 				dependency = sb.toString();
 			}
 
-			uniqueDependencies.add(dependency);
-		}
-
-		boolean patchedOSGiCore = _hasPatchedOSGiCore(uniqueDependencies);
-
-		if (patchedOSGiCore) {
-
-			// See https://github.com/brianchandotcom/liferay-portal/pull/62537
-
-			uniqueDependencies.remove(_ORG_OSGI_CORE_6_0_0_DEPENDENCY);
-			uniqueDependencies.remove(_OSGI_CORE_6_0_0_DEPENDENCY);
+			uniqueDependencies.add(_sortDependencyAttributes(dependency));
 		}
 
 		StringBundler sb = new StringBundler();
@@ -153,13 +150,6 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 				previousConfiguration = configuration;
 
 				sb.append("\n");
-
-				if (configuration.equals("compileOnly") && patchedOSGiCore) {
-					sb.append(indent);
-					sb.append("\t");
-					sb.append(_OSGI_CORE_6_0_0_DEPENDENCY);
-					sb.append("\n\n");
-				}
 			}
 
 			sb.append(indent);
@@ -171,18 +161,46 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 		return StringUtil.replace(content, dependencies, sb.toString());
 	}
 
-	private static final String _ORG_ECLIPSE_OSGI_3_13_0_LIFERAY_PATCHED_1 =
-		"compileOnly group: \"com.liferay\", name: \"org.eclipse.osgi\", " +
-			"version: \"3.13.0.LIFERAY-PATCHED-1\"";
+	private String _sortDependencyAttributes(String dependency) {
+		Matcher matcher = _dependencyPattern.matcher(dependency);
 
-	private static final String _ORG_OSGI_CORE_6_0_0_DEPENDENCY =
-		"compileOnly group: \"org.osgi\", name: \"org.osgi.core\", version: " +
-			"\"6.0.0\"";
+		if (!matcher.find()) {
+			return dependency;
+		}
 
-	private static final String _OSGI_CORE_6_0_0_DEPENDENCY =
-		"compileOnly group: \"org.osgi\", name: \"osgi.core\", version: " +
-			"\"6.0.0\"";
+		StringBundler sb = new StringBundler();
 
+		sb.append(matcher.group(1));
+		sb.append(StringPool.SPACE);
+
+		Map<String, String> attributesMap = new TreeMap<>();
+
+		matcher = _dependencyAttributesPattern.matcher(dependency);
+
+		while (matcher.find()) {
+			attributesMap.put(matcher.group(1), matcher.group(2));
+		}
+
+		for (Map.Entry<String, String> entry : attributesMap.entrySet()) {
+			sb.append(entry.getKey());
+			sb.append(": \"");
+			sb.append(entry.getValue());
+			sb.append("\"");
+			sb.append(", ");
+		}
+
+		sb.setIndex(sb.index() - 1);
+
+		return sb.toString();
+	}
+
+	private static final String _CHECK_PETRA_DEPENDENCIES_KEY =
+		"checkPetraDependencies";
+
+	private static final Pattern _dependencyAttributesPattern = Pattern.compile(
+		"(\\w+): \"([\\w.-]+)\"");
+	private static final Pattern _dependencyPattern = Pattern.compile(
+		"^(\\w+) (\\w+: \"[\\w.-]+\"(, )?)+$");
 	private static final Pattern _incorrectGroupNameVersionPattern =
 		Pattern.compile(
 			"(^[^\\s]+)\\s+\"([^:]+?):([^:]+?):([^\"]+?)\"(.*?)",

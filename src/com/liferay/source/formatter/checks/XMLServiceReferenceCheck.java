@@ -15,9 +15,9 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.source.formatter.checks.util.SourceUtil;
@@ -39,6 +39,11 @@ import org.dom4j.Element;
  * @author Hugo Huijser
  */
 public class XMLServiceReferenceCheck extends BaseFileCheck {
+
+	@Override
+	public boolean isLiferaySourceCheck() {
+		return true;
+	}
 
 	@Override
 	protected String doProcess(

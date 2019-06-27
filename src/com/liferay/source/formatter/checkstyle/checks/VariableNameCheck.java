@@ -70,7 +70,12 @@ public class VariableNameCheck extends BaseCheck {
 
 		String typeName = firstChildDetailAST.getText();
 
-		_checkTypeNameEnding(detailAST, name, typeName, "DetailAST");
+		if (isAttributeValue(_CHECK_TYPE_NAME_KEY)) {
+			_checkTypeName(
+				detailAST, name, typeName, "DetailAST", "HttpServletRequest",
+				"HttpServletResponse");
+		}
+
 		_checkTypo(detailAST, name, typeName);
 	}
 
@@ -137,7 +142,7 @@ public class VariableNameCheck extends BaseCheck {
 		}
 	}
 
-	private void _checkTypeNameEnding(
+	private void _checkTypeName(
 		DetailAST detailAST, String variableName, String typeName,
 		String... typeNames) {
 
@@ -396,6 +401,8 @@ public class VariableNameCheck extends BaseCheck {
 	private static final String[][] _ALL_CAPS_STRINGS = {
 		{"DDL", "Ddl"}, {"DDM", "Ddm"}, {"DL", "Dl"}, {"PK", "Pk"}
 	};
+
+	private static final String _CHECK_TYPE_NAME_KEY = "checkTypeName";
 
 	private static final String _MSG_INCORRECT_ENDING_VARIABLE =
 		"variable.incorrect.ending";

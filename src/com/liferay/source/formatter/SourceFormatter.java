@@ -15,12 +15,12 @@
 package com.liferay.source.formatter;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ArgumentsUtil;
 import com.liferay.portal.tools.GitException;
@@ -42,6 +42,7 @@ import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,10 +91,12 @@ public class SourceFormatter {
 			new ExcludeSyntaxPattern(ExcludeSyntax.GLOB, "**/test-results/**"),
 			new ExcludeSyntaxPattern(ExcludeSyntax.GLOB, "**/tmp/**"),
 			new ExcludeSyntaxPattern(
+				ExcludeSyntax.GLOB, "**/node_modules_cache/**"),
+			new ExcludeSyntaxPattern(
 				ExcludeSyntax.REGEX,
 				"^((?!/frontend-js-node-shims/src/).)*/node_modules/.*"),
 			new ExcludeSyntaxPattern(
-				ExcludeSyntax.REGEX, ".*/\\w+\\..*\\.properties")
+				ExcludeSyntax.REGEX, ".*/(\\w+\\.){2,}properties")
 		};
 
 	public static void main(String[] args) throws Exception {
@@ -144,17 +147,20 @@ public class SourceFormatter {
 				sourceFormatterArgs.setGitWorkingBranchName(
 					gitWorkingBranchName);
 
-				sourceFormatterArgs.setRecentChangesFileNames(
+				sourceFormatterArgs.addRecentChangesFileNames(
 					GitUtil.getCurrentBranchFileNames(
-						baseDirName, gitWorkingBranchName, false));
+						baseDirName, gitWorkingBranchName, false),
+					baseDirName);
 			}
 			else if (formatLatestAuthor) {
-				sourceFormatterArgs.setRecentChangesFileNames(
-					GitUtil.getLatestAuthorFileNames(baseDirName, false));
+				sourceFormatterArgs.addRecentChangesFileNames(
+					GitUtil.getLatestAuthorFileNames(baseDirName, false),
+					baseDirName);
 			}
 			else if (formatLocalChanges) {
-				sourceFormatterArgs.setRecentChangesFileNames(
-					GitUtil.getLocalChangesFileNames(baseDirName, false));
+				sourceFormatterArgs.addRecentChangesFileNames(
+					GitUtil.getLocalChangesFileNames(baseDirName, false),
+					baseDirName);
 			}
 
 			String fileNamesString = ArgumentsUtil.getString(
@@ -177,15 +183,25 @@ public class SourceFormatter {
 					Arrays.asList(fileExtensions));
 			}
 
+			boolean includeGeneratedFiles = ArgumentsUtil.getBoolean(
+				arguments, "include.generated.files",
+				SourceFormatterArgs.INCLUDE_GENERATED_FILES);
+
+			sourceFormatterArgs.setIncludeGeneratedFiles(includeGeneratedFiles);
+
 			boolean includeSubrepositories = ArgumentsUtil.getBoolean(
 				arguments, "include.subrepositories",
 				SourceFormatterArgs.INCLUDE_SUBREPOSITORIES);
 
-			List<String> recentChangesFileNames =
+			Set<String> recentChangesFileNames =
 				sourceFormatterArgs.getRecentChangesFileNames();
 
-			if (recentChangesFileNames != null) {
-				includeSubrepositories = true;
+			for (String recentChangesFileName : recentChangesFileNames) {
+				if (recentChangesFileName.endsWith("ci-merge")) {
+					includeSubrepositories = true;
+
+					break;
+				}
 			}
 
 			sourceFormatterArgs.setIncludeSubrepositories(
@@ -226,6 +242,17 @@ public class SourceFormatter {
 				SourceFormatterArgs.SHOW_STATUS_UPDATES);
 
 			sourceFormatterArgs.setShowStatusUpdates(showStatusUpdates);
+
+			String skipCheckNamesString = ArgumentsUtil.getString(
+				arguments, "skip.check.names", null);
+
+			String[] skipCheckNames = StringUtil.split(
+				skipCheckNamesString, StringPool.COMMA);
+
+			if (ArrayUtil.isNotEmpty(skipCheckNames)) {
+				sourceFormatterArgs.setSkipCheckNames(
+					Arrays.asList(skipCheckNames));
+			}
 
 			boolean throwException = ArgumentsUtil.getBoolean(
 				arguments, "source.throw.exception",
@@ -406,8 +433,7 @@ public class SourceFormatter {
 			}
 
 			String message = StringBundler.concat(
-				"Found ", String.valueOf(index - 1), " formatting issues:\n",
-				sb.toString());
+				"Found ", index - 1, " formatting issues:\n", sb.toString());
 
 			throw new Exception(message);
 		}
@@ -448,7 +474,7 @@ public class SourceFormatter {
 	}
 
 	private void _addDependentFileNames() {
-		List<String> recentChangesFileNames =
+		Set<String> recentChangesFileNames =
 			_sourceFormatterArgs.getRecentChangesFileNames();
 
 		if (recentChangesFileNames == null) {
@@ -457,45 +483,91 @@ public class SourceFormatter {
 
 		Set<String> dependentFileNames = new HashSet<>();
 
+		boolean buildPropertiesAdded = false;
+		boolean tagJavaFilesAdded = false;
+
 		for (String recentChangesFileName : recentChangesFileNames) {
-			if (!recentChangesFileName.endsWith("ServiceImpl.java")) {
-				continue;
-			}
-
-			String dirName = recentChangesFileName.substring(
-				0, recentChangesFileName.lastIndexOf(CharPool.SLASH));
-
-			while (true) {
-				String serviceFileName = dirName + "/service.xml";
+			if (!buildPropertiesAdded &&
+				recentChangesFileName.contains("/module/")) {
 
 				File file = new File(
-					_sourceFormatterArgs.getBaseDirName() + serviceFileName);
+					_sourceFormatterArgs.getBaseDirName() + "build.properties");
 
 				if (file.exists()) {
-					dependentFileNames.add(serviceFileName);
-
-					break;
+					dependentFileNames.add(
+						_sourceFormatterArgs.getBaseDirName() +
+							"build.properties");
 				}
 
-				int pos = dirName.lastIndexOf(CharPool.SLASH);
+				buildPropertiesAdded = true;
+			}
 
-				if (pos == -1) {
-					break;
-				}
+			if (recentChangesFileName.endsWith("ServiceImpl.java")) {
+				dependentFileNames = _addServiceXMLFileName(
+					dependentFileNames, recentChangesFileName);
+			}
+			else if (!tagJavaFilesAdded &&
+					 recentChangesFileName.endsWith(".tld")) {
 
-				dirName = dirName.substring(0, pos);
+				dependentFileNames.addAll(
+					SourceFormatterUtil.filterFileNames(
+						_allFileNames, new String[0],
+						new String[] {"**/*Tag.java"}, _sourceFormatterExcludes,
+						false));
+
+				tagJavaFilesAdded = true;
 			}
 		}
 
-		_sourceFormatterArgs.addRecentChangesFileNames(dependentFileNames);
+		_sourceFormatterArgs.addRecentChangesFileNames(
+			dependentFileNames, null);
 	}
 
-	private void _excludeWorkingDirCheckoutPrivateApps() throws IOException {
-		if (!_isPortalSource()) {
-			return;
+	private Set<String> _addServiceXMLFileName(
+		Set<String> dependentFileNames, String serviceImplFileName) {
+
+		String dirName = serviceImplFileName.substring(
+			0, serviceImplFileName.lastIndexOf(CharPool.SLASH));
+
+		while (true) {
+			String serviceFileName = dirName + "/service.xml";
+
+			File file = new File(
+				_sourceFormatterArgs.getBaseDirName() + serviceFileName);
+
+			if (file.exists()) {
+				dependentFileNames.add(
+					_sourceFormatterArgs.getBaseDirName() + serviceFileName);
+
+				return dependentFileNames;
+			}
+
+			int pos = dirName.lastIndexOf(CharPool.SLASH);
+
+			if (pos == -1) {
+				return dependentFileNames;
+			}
+
+			dirName = dirName.substring(0, pos);
+		}
+	}
+
+	private boolean _containsDir(String dirName) {
+		File directory = SourceFormatterUtil.getFile(
+			_sourceFormatterArgs.getBaseDirName(), dirName,
+			ToolsUtil.PORTAL_MAX_DIR_LEVEL);
+
+		if (directory != null) {
+			return true;
 		}
 
-		File file = new File(_getPortalDir(), "working.dir.properties");
+		return false;
+	}
+
+	private void _excludeWorkingDirCheckoutPrivateApps(File portalDir)
+		throws IOException {
+
+		File file = new File(portalDir, "working.dir.properties");
 
 		if (!file.exists()) {
 			return;
@@ -596,16 +668,19 @@ public class SourceFormatter {
 		return pluginsInsideModulesDirectoryNames;
 	}
 
-	private File _getPortalDir() {
-		File portalImplDir = SourceFormatterUtil.getFile(
-			_sourceFormatterArgs.getBaseDirName(), "portal-impl",
-			ToolsUtil.PORTAL_MAX_DIR_LEVEL);
+	private String _getPortalBranchName() {
+		for (Map.Entry<String, Properties> entry : _propertiesMap.entrySet()) {
+			Properties properties = entry.getValue();
 
-		if (portalImplDir == null) {
-			return null;
+			if (properties.containsKey(
+					SourceFormatterUtil.GIT_LIFERAY_PORTAL_BRANCH)) {
+
+				return properties.getProperty(
+					SourceFormatterUtil.GIT_LIFERAY_PORTAL_BRANCH);
+			}
 		}
 
-		return portalImplDir.getParentFile();
+		return null;
 	}
 
 	private String _getProjectPathPrefix() throws IOException {
@@ -649,7 +724,16 @@ public class SourceFormatter {
 		_sourceFormatterExcludes = new SourceFormatterExcludes(
 			SetUtil.fromArray(DEFAULT_EXCLUDE_SYNTAX_PATTERNS));
 
-		_excludeWorkingDirCheckoutPrivateApps();
+		_portalSource = _containsDir("portal-impl");
+
+		if (_portalSource) {
+			File portalDir = SourceFormatterUtil.getPortalDir(
+				_sourceFormatterArgs.getBaseDirName());
+
+			_excludeWorkingDirCheckoutPrivateApps(portalDir);
+		}
+
+		_propertiesMap = new HashMap<>();
 
 		// Find properties file in any parent directory
 
@@ -681,12 +765,24 @@ public class SourceFormatter {
 			_readProperties(new File(modulePropertiesFileName));
 		}
 
+		if (!_portalSource && _containsDir("modules/private/apps")) {
+
+			// Grab and read properties from portal branch
+
+			String propertiesContent = SourceFormatterUtil.getGitContent(
+				_PROPERTIES_FILE_NAME, _getPortalBranchName());
+
+			_readProperties(
+				propertiesContent,
+				SourceUtil.getAbsolutePath(
+					_sourceFormatterArgs.getBaseDirName()));
+		}
+
 		_addDependentFileNames();
 
 		_pluginsInsideModulesDirectoryNames =
 			_getPluginsInsideModulesDirectoryNames();
 
-		_portalSource = _isPortalSource();
 		_subrepository = _isSubrepository();
 
 		_projectPathPrefix = _getProjectPathPrefix();
@@ -708,20 +804,8 @@ public class SourceFormatter {
 		}
 	}
 
-	private boolean _isPortalSource() {
-		File portalImplDir = SourceFormatterUtil.getFile(
-			_sourceFormatterArgs.getBaseDirName(), "portal-impl",
-			ToolsUtil.PORTAL_MAX_DIR_LEVEL);
-
-		if (portalImplDir != null) {
-			return true;
-		}
-
-		return false;
-	}
-
 	private boolean _isSubrepository() throws IOException {
-		if (_isPortalSource()) {
+		if (_portalSource) {
 			return false;
 		}
 
@@ -776,7 +860,13 @@ public class SourceFormatter {
 
 		int pos = propertiesFileLocation.lastIndexOf(StringPool.SLASH);
 
-		propertiesFileLocation = propertiesFileLocation.substring(0, pos + 1);
+		propertiesFileLocation = propertiesFileLocation.substring(0, pos);
+
+		_readProperties(properties, propertiesFileLocation);
+	}
+
+	private void _readProperties(
+		Properties properties, String propertiesFileLocation) {
 
 		String value = properties.getProperty("source.formatter.excludes");
 
@@ -798,6 +888,20 @@ public class SourceFormatter {
 		properties.remove("source.formatter.excludes");
 
 		_propertiesMap.put(propertiesFileLocation, properties);
+	}
+
+	private void _readProperties(String content, String propertiesFileLocation)
+		throws IOException {
+
+		Properties properties = new Properties();
+
+		properties.load(new StringReader(content));
+
+		if (properties.isEmpty()) {
+			return;
+		}
+
+		_readProperties(properties, propertiesFileLocation);
 	}
 
 	private void _runSourceProcessor(SourceProcessor sourceProcessor)
@@ -943,7 +1047,7 @@ public class SourceFormatter {
 	};
 
 	private String _projectPathPrefix;
-	private Map<String, Properties> _propertiesMap = new HashMap<>();
+	private Map<String, Properties> _propertiesMap;
 	private final SourceFormatterArgs _sourceFormatterArgs;
 	private SourceFormatterConfiguration _sourceFormatterConfiguration;
 	private SourceFormatterExcludes _sourceFormatterExcludes;

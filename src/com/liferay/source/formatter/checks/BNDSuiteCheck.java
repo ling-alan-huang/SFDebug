@@ -14,15 +14,13 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.checks.util.BNDSourceUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -30,9 +28,9 @@ import java.util.List;
  */
 public class BNDSuiteCheck extends BaseFileCheck {
 
-	public void setAllowedFileNames(String allowedFileNames) {
-		Collections.addAll(
-			_allowedFileNames, StringUtil.split(allowedFileNames));
+	@Override
+	public boolean isLiferaySourceCheck() {
+		return true;
 	}
 
 	@Override
@@ -43,7 +41,10 @@ public class BNDSuiteCheck extends BaseFileCheck {
 			return content;
 		}
 
-		for (String allowedFileName : _allowedFileNames) {
+		List<String> allowedFileNames = getAttributeValues(
+			_ALLOWED_FILE_NAMES_KEY, absolutePath);
+
+		for (String allowedFileName : allowedFileNames) {
 			if (absolutePath.endsWith(allowedFileName)) {
 				return content;
 			}
@@ -105,11 +106,11 @@ public class BNDSuiteCheck extends BaseFileCheck {
 		return content;
 	}
 
+	private static final String _ALLOWED_FILE_NAMES_KEY = "allowedFileNames";
+
 	private static final String[] _SUITES = {
 		"collaboration", "forms-and-workflow", "foundation", "static",
 		"web-experience"
 	};
-
-	private final List<String> _allowedFileNames = new ArrayList<>();
 
 }

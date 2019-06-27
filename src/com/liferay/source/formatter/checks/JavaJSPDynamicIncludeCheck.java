@@ -15,8 +15,8 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.BNDSettings;
 import com.liferay.source.formatter.checks.util.BNDSourceUtil;
@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 public class JavaJSPDynamicIncludeCheck extends BaseJavaTermCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -58,9 +58,11 @@ public class JavaJSPDynamicIncludeCheck extends BaseJavaTermCheck {
 
 		JavaClass javaClass = (JavaClass)javaTerm;
 
-		List<String> extendedClassNames = javaClass.getExtendedClassNames();
+		List<String> extendedClassNames = javaClass.getExtendedClassNames(true);
 
-		if (extendedClassNames.contains("BaseJSPDynamicInclude") &&
+		if (extendedClassNames.contains(
+				"com.liferay.portal.kernel.servlet.taglib." +
+					"BaseJSPDynamicInclude") &&
 			!className.endsWith("JSPDynamicInclude")) {
 
 			addMessage(

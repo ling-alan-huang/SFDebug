@@ -14,9 +14,9 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
@@ -58,7 +58,7 @@ public class LFRBuildReadmeCheck extends BaseFileCheck {
 		}
 
 		_modulesReadmeMarkdownContent = GetterUtil.getString(
-			getPortalContent(_MODULES_README_MARKDOWN_FILE_NAME, "master"));
+			getGitContent(_MODULES_README_MARKDOWN_FILE_NAME, "master"));
 
 		return _modulesReadmeMarkdownContent;
 	}

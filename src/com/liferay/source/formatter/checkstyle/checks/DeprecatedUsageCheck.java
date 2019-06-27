@@ -17,7 +17,6 @@ package com.liferay.source.formatter.checkstyle.checks;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.checks.util.BNDSourceUtil;
@@ -66,14 +65,6 @@ public class DeprecatedUsageCheck extends BaseCheck {
 	@Override
 	public int[] getDefaultTokens() {
 		return new int[] {TokenTypes.CLASS_DEF};
-	}
-
-	public void setAllowedFullyQualifiedClassNames(
-		String allowedFullyQualifiedClassNames) {
-
-		_allowedFullyQualifiedClassNames = ArrayUtil.append(
-			_allowedFullyQualifiedClassNames,
-			StringUtil.split(allowedFullyQualifiedClassNames));
 	}
 
 	@Override
@@ -175,6 +166,9 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		DetailAST detailAST, String packageName, List<String> importNames,
 		String directoryPath) {
 
+		List<String> allowedFullyQualifiedClassNames = getAttributeValues(
+			_ALLOWED_FULLY_QUALIFIED_CLASS_NAMES_KEY);
+
 		List<DetailAST> literalNewDetailASTList =
 			DetailASTUtil.getAllChildTokens(
 				detailAST, true, TokenTypes.LITERAL_NEW);
@@ -213,8 +207,7 @@ public class DeprecatedUsageCheck extends BaseCheck {
 
 			if ((fullyQualifiedClassName == null) ||
 				!fullyQualifiedClassName.startsWith("com.liferay.") ||
-				ArrayUtil.contains(
-					_allowedFullyQualifiedClassNames,
+				allowedFullyQualifiedClassNames.contains(
 					fullyQualifiedClassName)) {
 
 				continue;
@@ -262,6 +255,9 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		DetailAST detailAST, String packageName, List<String> importNames,
 		String directoryPath) {
 
+		List<String> allowedFullyQualifiedClassNames = getAttributeValues(
+			_ALLOWED_FULLY_QUALIFIED_CLASS_NAMES_KEY);
+
 		List<DetailAST> dotDetailASTList = DetailASTUtil.getAllChildTokens(
 			detailAST, true, TokenTypes.DOT);
 
@@ -301,8 +297,7 @@ public class DeprecatedUsageCheck extends BaseCheck {
 
 			if ((fullyQualifiedClassName == null) ||
 				!fullyQualifiedClassName.startsWith("com.liferay.") ||
-				ArrayUtil.contains(
-					_allowedFullyQualifiedClassNames,
+				allowedFullyQualifiedClassNames.contains(
 					fullyQualifiedClassName)) {
 
 				continue;
@@ -338,6 +333,9 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		DetailAST detailAST, String className, String packageName,
 		List<String> importNames, String directoryPath) {
 
+		List<String> allowedFullyQualifiedClassNames = getAttributeValues(
+			_ALLOWED_FULLY_QUALIFIED_CLASS_NAMES_KEY);
+
 		List<DetailAST> methodCallDetailASTList =
 			DetailASTUtil.getAllChildTokens(
 				detailAST, true, TokenTypes.METHOD_CALL);
@@ -355,8 +353,7 @@ public class DeprecatedUsageCheck extends BaseCheck {
 
 			if ((fullyQualifiedClassName == null) ||
 				!fullyQualifiedClassName.startsWith("com.liferay.") ||
-				ArrayUtil.contains(
-					_allowedFullyQualifiedClassNames,
+				allowedFullyQualifiedClassNames.contains(
 					fullyQualifiedClassName)) {
 
 				continue;
@@ -471,10 +468,12 @@ public class DeprecatedUsageCheck extends BaseCheck {
 			fullyQualifiedClassName = className;
 		}
 
+		List<String> allowedFullyQualifiedClassNames = getAttributeValues(
+			_ALLOWED_FULLY_QUALIFIED_CLASS_NAMES_KEY);
+
 		if ((fullyQualifiedClassName == null) ||
 			!fullyQualifiedClassName.startsWith("com.liferay.") ||
-			ArrayUtil.contains(
-				_allowedFullyQualifiedClassNames, fullyQualifiedClassName)) {
+			allowedFullyQualifiedClassNames.contains(fullyQualifiedClassName)) {
 
 			return;
 		}
@@ -624,31 +623,17 @@ public class DeprecatedUsageCheck extends BaseCheck {
 				}
 			}
 
-			for (String extendedClassName : javaClass.getExtendedClassNames()) {
-				String fullyQualifiedName = null;
-
-				if (extendedClassName.matches("([a-z]\\w*\\.){2,}[A-Z]\\w*")) {
-					fullyQualifiedName = extendedClassName;
-				}
-				else {
-					for (String importName : javaClass.getImports()) {
-						if (importName.endsWith("." + extendedClassName)) {
-							fullyQualifiedName = importName;
-
-							break;
-						}
-					}
-				}
+			for (String fullyQualifiedName :
+					javaClass.getExtendedClassNames(true)) {
 
 				ClassInfo extendedClassInfo = null;
 
-				if (fullyQualifiedName != null) {
+				if (!fullyQualifiedName.startsWith(
+						javaClass.getPackageName())) {
+
 					extendedClassInfo = _getClassInfo(fullyQualifiedName);
 				}
 				else {
-					fullyQualifiedName =
-						javaClass.getPackageName() + "." + extendedClassName;
-
 					String absolutePath = SourceUtil.getAbsolutePath(file);
 
 					int x = absolutePath.lastIndexOf("/");
@@ -1079,6 +1064,9 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		}
 	}
 
+	private static final String _ALLOWED_FULLY_QUALIFIED_CLASS_NAMES_KEY =
+		"allowedFullyQualifiedClassNames";
+
 	private static final FileSystem _FILE_SYSTEM = FileSystems.getDefault();
 
 	private static final String _MSG_DEPRECATED_CONSTRUCTOR_CALL =
@@ -1118,7 +1106,6 @@ public class DeprecatedUsageCheck extends BaseCheck {
 	private static final Pattern _fieldNamePattern = Pattern.compile(
 		"((.*\\.)?([A-Z]\\w+))\\.(\\w+)");
 
-	private String[] _allowedFullyQualifiedClassNames = new String[0];
 	private Map<String, String> _bundleSymbolicNamesMap;
 	private final Map<String, ClassInfo> _classInfoMap = new HashMap<>();
 	private String _rootDirName;

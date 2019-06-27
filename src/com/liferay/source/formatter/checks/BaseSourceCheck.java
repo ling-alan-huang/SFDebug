@@ -15,10 +15,13 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.json.JSONObjectImpl;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
@@ -26,13 +29,10 @@ import com.liferay.source.formatter.BNDSettings;
 import com.liferay.source.formatter.SourceFormatterExcludes;
 import com.liferay.source.formatter.SourceFormatterMessage;
 import com.liferay.source.formatter.checks.util.SourceUtil;
-import com.liferay.source.formatter.checkstyle.util.CheckstyleUtil;
 import com.liferay.source.formatter.util.CheckType;
 import com.liferay.source.formatter.util.FileUtil;
+import com.liferay.source.formatter.util.SourceFormatterCheckUtil;
 import com.liferay.source.formatter.util.SourceFormatterUtil;
-
-import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
-import com.puppycrawl.tools.checkstyle.api.Configuration;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,7 +44,6 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -73,17 +72,18 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	}
 
 	@Override
-	public boolean isEnabled() {
-		return _enabled;
+	public boolean isEnabled(String absolutePath) {
+		return isAttributeValue(
+			SourceFormatterCheckUtil.ENABLED_KEY, absolutePath, true);
 	}
 
 	@Override
-	public boolean isModulesCheck() {
+	public boolean isLiferaySourceCheck() {
 		return false;
 	}
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isModuleSourceCheck() {
 		return false;
 	}
 
@@ -92,20 +92,18 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	}
 
 	@Override
+	public void setAttributes(String attributes) throws JSONException {
+		_attributesJSONObject = new JSONObjectImpl(attributes);
+	}
+
+	@Override
 	public void setBaseDirName(String baseDirName) {
 		_baseDirName = baseDirName;
 	}
 
 	@Override
-	public void setCheckstyleConfiguration(
-		Configuration checkstyleConfiguration) {
-
-		_checkstyleConfiguration = checkstyleConfiguration;
-	}
-
-	@Override
-	public void setEnabled(boolean enabled) {
-		_enabled = enabled;
+	public void setExcludes(String excludes) throws JSONException {
+		_excludesJSONObject = new JSONObjectImpl(excludes);
 	}
 
 	@Override
@@ -134,11 +132,6 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	@Override
 	public void setProjectPathPrefix(String projectPathPrefix) {
 		_projectPathPrefix = projectPathPrefix;
-	}
-
-	@Override
-	public void setPropertiesMap(Map<String, Properties> propertiesMap) {
-		_propertiesMap = propertiesMap;
 	}
 
 	@Override
@@ -192,21 +185,33 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		_sourceFormatterMessagesMap.remove(fileName);
 	}
 
+	protected String getAttributeValue(
+		String attributeKey, String absolutePath) {
+
+		return getAttributeValue(attributeKey, StringPool.BLANK, absolutePath);
+	}
+
+	protected String getAttributeValue(
+		String attributeKey, String defaultValue, String absolutePath) {
+
+		return SourceFormatterCheckUtil.getJSONObjectValue(
+			_attributesJSONObject, _attributeValueMap, attributeKey,
+			defaultValue, absolutePath, _baseDirName);
+	}
+
+	protected List<String> getAttributeValues(
+		String attributeKey, String absolutePath) {
+
+		return SourceFormatterCheckUtil.getJSONObjectValues(
+			_attributesJSONObject, attributeKey, _attributeValuesMap,
+			absolutePath, _baseDirName);
+	}
+
 	protected String getBaseDirName() {
 		return _baseDirName;
 	}
 
 	protected BNDSettings getBNDSettings(String fileName) throws IOException {
-		for (Map.Entry<String, BNDSettings> entry :
-				_bndSettingsMap.entrySet()) {
-
-			String bndFileLocation = entry.getKey();
-
-			if (fileName.startsWith(bndFileLocation)) {
-				return entry.getValue();
-			}
-		}
-
 		String bndFileLocation = fileName;
 
 		while (true) {
@@ -218,31 +223,26 @@ public abstract class BaseSourceCheck implements SourceCheck {
 
 			bndFileLocation = bndFileLocation.substring(0, pos + 1);
 
+			BNDSettings bndSettings = _bndSettingsMap.get(bndFileLocation);
+
+			if (bndSettings != null) {
+				return bndSettings;
+			}
+
 			File file = new File(bndFileLocation + "bnd.bnd");
 
 			if (file.exists()) {
-				return new BNDSettings(
+				bndSettings = new BNDSettings(
 					bndFileLocation + "bnd.bnd", FileUtil.read(file));
+
+				_bndSettingsMap.put(bndFileLocation, bndSettings);
+
+				return bndSettings;
 			}
 
 			bndFileLocation = StringUtil.replaceLast(
 				bndFileLocation, CharPool.SLASH, StringPool.BLANK);
 		}
-	}
-
-	protected Map<String, String> getCheckstyleAttributesMap(String checkName)
-		throws CheckstyleException {
-
-		return CheckstyleUtil.getAttributesMap(
-			checkName, _checkstyleConfiguration);
-	}
-
-	protected String getCheckstyleAttributeValue(
-			String checkName, String attributeName)
-		throws CheckstyleException {
-
-		return CheckstyleUtil.getAttributeValue(
-			checkName, attributeName, _checkstyleConfiguration);
 	}
 
 	protected String getContent(String fileName, int level) throws IOException {
@@ -312,6 +312,12 @@ public abstract class BaseSourceCheck implements SourceCheck {
 			baseDirName, excludes, includes, _sourceFormatterExcludes, true);
 	}
 
+	protected String getGitContent(String fileName, String branchName)
+		throws IOException {
+
+		return SourceFormatterUtil.getGitContent(fileName, branchName);
+	}
+
 	protected int getLeadingTabCount(String line) {
 		int leadingTabCount = 0;
 
@@ -370,65 +376,34 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		return _pluginsInsideModulesDirectoryNames;
 	}
 
-	protected String getPortalBranchName() {
-		String value = SourceFormatterUtil.getPropertyValue(
-			SourceFormatterUtil.GIT_LIFERAY_PORTAL_BRANCH, _propertiesMap);
+	protected String getPortalContent(String fileName, String absolutePath)
+		throws IOException {
 
-		if (Validator.isNull(value)) {
-			return StringPool.BLANK;
-		}
-
-		if (!value.contains(StringPool.COMMA)) {
-			return value;
-		}
-
-		String[] portalBranchNames = StringUtil.split(value);
-
-		return portalBranchNames[0];
-	}
-
-	protected String getPortalContent(String fileName) throws IOException {
-		return getPortalContent(fileName, false);
+		return getPortalContent(fileName, absolutePath, false);
 	}
 
 	protected String getPortalContent(
-			String fileName, boolean forceRetrieveFromGit)
+			String fileName, String absolutePath, boolean forceRetrieveFromGit)
 		throws IOException {
 
-		return getPortalContent(
-			fileName, getPortalBranchName(), forceRetrieveFromGit);
-	}
+		String portalBranchName = getAttributeValue(
+			SourceFormatterUtil.GIT_LIFERAY_PORTAL_BRANCH, absolutePath);
 
-	protected String getPortalContent(String fileName, String portalBranchName)
-		throws IOException {
-
-		return getPortalContent(fileName, portalBranchName, false);
-	}
-
-	protected String getPortalContent(
-			String fileName, String portalBranchName,
-			boolean forceRetrieveFromGit)
-		throws IOException {
-
-		if (!forceRetrieveFromGit) {
-			String content = getContent(
-				fileName, ToolsUtil.PORTAL_MAX_DIR_LEVEL);
-
-			if (Validator.isNotNull(content)) {
-				return content;
-			}
+		if (forceRetrieveFromGit) {
+			return getGitContent(fileName, portalBranchName);
 		}
 
-		URL url = _getPortalGitURL(fileName, portalBranchName);
+		String content = getContent(fileName, ToolsUtil.PORTAL_MAX_DIR_LEVEL);
 
-		if (url != null) {
-			return StringUtil.read(url.openStream());
+		if (Validator.isNotNull(content)) {
+			return content;
 		}
 
-		return null;
+		return getGitContent(fileName, portalBranchName);
 	}
 
-	protected synchronized Document getPortalCustomSQLDocument()
+	protected synchronized Document getPortalCustomSQLDocument(
+			String absolutePath)
 		throws DocumentException, IOException {
 
 		if (_portalCustomSQLDocument != null) {
@@ -442,7 +417,7 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		}
 
 		String portalCustomSQLDefaultContent = getPortalContent(
-			"portal-impl/src/custom-sql/default.xml");
+			"portal-impl/src/custom-sql/default.xml", absolutePath);
 
 		if (portalCustomSQLDefaultContent == null) {
 			return _portalCustomSQLDocument;
@@ -460,7 +435,8 @@ public abstract class BaseSourceCheck implements SourceCheck {
 				(List<Element>)customSQLDefaultRootElement.elements("sql")) {
 
 			String customSQLFileContent = getPortalContent(
-				"portal-impl/src/" + sqlElement.attributeValue("file"));
+				"portal-impl/src/" + sqlElement.attributeValue("file"),
+				absolutePath);
 
 			if (customSQLFileContent == null) {
 				continue;
@@ -492,14 +468,8 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		return portalImplDir.getParentFile();
 	}
 
-	protected InputStream getPortalInputStream(String fileName)
-		throws IOException {
-
-		return getPortalInputStream(fileName, getPortalBranchName());
-	}
-
 	protected InputStream getPortalInputStream(
-			String fileName, String portalBranchName)
+			String fileName, String absolutePath)
 		throws IOException {
 
 		File file = getFile(fileName, ToolsUtil.PORTAL_MAX_DIR_LEVEL);
@@ -508,7 +478,11 @@ public abstract class BaseSourceCheck implements SourceCheck {
 			return new FileInputStream(file);
 		}
 
-		URL url = _getPortalGitURL(fileName, portalBranchName);
+		String portalBranchName = getAttributeValue(
+			SourceFormatterUtil.GIT_LIFERAY_PORTAL_BRANCH, absolutePath);
+
+		URL url = SourceFormatterUtil.getPortalGitURL(
+			fileName, portalBranchName);
 
 		if (url != null) {
 			return url.openStream();
@@ -541,10 +515,6 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		return _projectPathPrefix;
 	}
 
-	protected Map<String, Properties> getPropertiesMap() {
-		return _propertiesMap;
-	}
-
 	protected SourceFormatterExcludes getSourceFormatterExcludes() {
 		return _sourceFormatterExcludes;
 	}
@@ -574,60 +544,23 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		return null;
 	}
 
-	protected boolean isExcludedPath(
-		Properties properties, String key, String path, int lineNumber,
-		String parameter) {
+	protected boolean isAttributeValue(
+		String attributeKey, String absolutePath) {
 
-		List<String> excludes = ListUtil.fromString(
-			GetterUtil.getString(properties.getProperty(key)),
-			StringPool.COMMA);
+		return GetterUtil.getBoolean(
+			getAttributeValue(attributeKey, absolutePath));
+	}
 
-		if (ListUtil.isEmpty(excludes)) {
-			return false;
+	protected boolean isAttributeValue(
+		String attributeKey, String absolutePath, boolean defaultValue) {
+
+		String attributeValue = getAttributeValue(attributeKey, absolutePath);
+
+		if (Validator.isNull(attributeValue)) {
+			return defaultValue;
 		}
 
-		String pathWithParameter = null;
-
-		if (Validator.isNotNull(parameter)) {
-			pathWithParameter = path + StringPool.AT + parameter;
-		}
-
-		String pathWithLineNumber = null;
-
-		if (lineNumber > 0) {
-			pathWithLineNumber = path + StringPool.AT + lineNumber;
-		}
-
-		for (String exclude : excludes) {
-			if (Validator.isNull(exclude)) {
-				continue;
-			}
-
-			if (exclude.startsWith("**")) {
-				exclude = exclude.substring(2);
-			}
-
-			if (exclude.endsWith("**")) {
-				exclude = exclude.substring(0, exclude.length() - 2);
-
-				if (path.contains(exclude)) {
-					return true;
-				}
-
-				continue;
-			}
-
-			if (path.endsWith(exclude) ||
-				((pathWithParameter != null) &&
-				 pathWithParameter.endsWith(exclude)) ||
-				((pathWithLineNumber != null) &&
-				 pathWithLineNumber.endsWith(exclude))) {
-
-				return true;
-			}
-		}
-
-		return false;
+		return GetterUtil.getBoolean(attributeValue);
 	}
 
 	protected boolean isExcludedPath(String key, String path) {
@@ -635,30 +568,17 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	}
 
 	protected boolean isExcludedPath(String key, String path, int lineNumber) {
-		return isExcludedPath(key, path, lineNumber, null);
-	}
-
-	protected boolean isExcludedPath(
-		String key, String path, int lineNumber, String parameter) {
-
-		for (Map.Entry<String, Properties> entry : _propertiesMap.entrySet()) {
-			String propertiesFileLocation = entry.getKey();
-
-			if (path.startsWith(propertiesFileLocation) &&
-				isExcludedPath(
-					entry.getValue(), key, path, lineNumber, parameter)) {
-
-				return true;
-			}
-		}
-
-		return false;
+		return SourceFormatterCheckUtil.isExcludedPath(
+			_excludesJSONObject, _excludesValuesMap, key, path, lineNumber,
+			null, _baseDirName);
 	}
 
 	protected boolean isExcludedPath(
 		String key, String path, String parameter) {
 
-		return isExcludedPath(key, path, -1, parameter);
+		return SourceFormatterCheckUtil.isExcludedPath(
+			_excludesJSONObject, _excludesValuesMap, key, path, -1, parameter,
+			_baseDirName);
 	}
 
 	protected boolean isModulesApp(String absolutePath, boolean privateOnly) {
@@ -717,10 +637,6 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		return _subrepository;
 	}
 
-	protected void putBNDSettings(BNDSettings bndSettings) {
-		_bndSettingsMap.put(bndSettings.getFileLocation(), bndSettings);
-	}
-
 	protected String stripQuotes(String s) {
 		return stripQuotes(s, CharPool.APOSTROPHE, CharPool.QUOTE);
 	}
@@ -771,30 +687,17 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	protected static final String RUN_OUTSIDE_PORTAL_EXCLUDES =
 		"run.outside.portal.excludes";
 
-	private URL _getPortalGitURL(String fileName, String portalBranchName) {
-		if (Validator.isNull(portalBranchName)) {
-			return null;
-		}
-
-		try {
-			return new URL(
-				StringBundler.concat(
-					_GIT_LIFERAY_PORTAL_URL, portalBranchName, StringPool.SLASH,
-					fileName));
-		}
-		catch (Exception e) {
-			return null;
-		}
-	}
-
-	private static final String _GIT_LIFERAY_PORTAL_URL =
-		"https://raw.githubusercontent.com/liferay/liferay-portal/";
-
+	private JSONObject _attributesJSONObject = new JSONObjectImpl();
+	private final Map<String, String> _attributeValueMap =
+		new ConcurrentHashMap<>();
+	private final Map<String, List<String>> _attributeValuesMap =
+		new ConcurrentHashMap<>();
 	private String _baseDirName;
 	private final Map<String, BNDSettings> _bndSettingsMap =
 		new ConcurrentHashMap<>();
-	private Configuration _checkstyleConfiguration;
-	private boolean _enabled = true;
+	private JSONObject _excludesJSONObject;
+	private final Map<String, List<String>> _excludesValuesMap =
+		new ConcurrentHashMap<>();
 	private List<String> _fileExtensions;
 	private int _maxLineLength;
 	private List<String> _pluginsInsideModulesDirectoryNames;
@@ -802,7 +705,6 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	private boolean _portalSource;
 	private String _projectName;
 	private String _projectPathPrefix;
-	private Map<String, Properties> _propertiesMap;
 	private SourceFormatterExcludes _sourceFormatterExcludes;
 	private final Map<String, Set<SourceFormatterMessage>>
 		_sourceFormatterMessagesMap = new ConcurrentHashMap<>();

@@ -4,7 +4,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/ant.jar"/>
 	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/bnd.jar"/>
-	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/checkstyle-8.11.jar"/>
+	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/checkstyle-8.11.jar" sourcepath="/checkstyle-checkstyle-8.11"/>
 	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/checkstyle-8.11-all.jar"/>
 	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/com.liferay.petra.concurrent-1.0.2.jar"/>
 	<classpathentry kind="lib" path="/home/alan/SFDebug/otherjars/com.liferay.petra.lang-1.1.1.jar"/>

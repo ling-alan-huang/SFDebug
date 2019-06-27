@@ -15,6 +15,7 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
@@ -125,8 +126,8 @@ public class SessionKeysCheck extends BaseFileCheck {
 				continue;
 			}
 
-			String oldSub = prefix.concat(oldKey).concat(suffix);
-			String newSub = prefix.concat(newKey).concat(suffix);
+			String oldSub = StringBundler.concat(prefix, oldKey, suffix);
+			String newSub = StringBundler.concat(prefix, newKey, suffix);
 
 			newContent = StringUtil.replaceFirst(newContent, oldSub, newSub);
 		}

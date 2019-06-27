@@ -8,6 +8,10 @@
 			<fileset dir="/home/alan/liferay_code/master/liferay-portal/modules/util/source-formatter/src/main/java/com/liferay/source" />
 		</copy>
 
+		<copy todir="/home/alan/SFDebug/src/com/liferay/portal/tools/java/parser">
+			<fileset dir="/home/alan/liferay_code/master/liferay-portal/modules/util/portal-tools-java-parser/src/main/java/com/liferay/portal/tools/java/parser" />
+		</copy>
+
 		<copy todir="/home/alan/SFDebug/bin">
 			<fileset
 				dir="/home/alan/liferay_code/master/liferay-portal/modules/util/source-formatter/src/main/resources"

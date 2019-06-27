@@ -33,6 +33,11 @@ import java.util.regex.Pattern;
 public class JavaDeprecatedJavadocCheck extends BaseFileCheck {
 
 	@Override
+	public boolean isLiferaySourceCheck() {
+		return true;
+	}
+
+	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
 		throws ReflectiveOperationException {
@@ -170,6 +175,7 @@ public class JavaDeprecatedJavadocCheck extends BaseFileCheck {
 			{
 				put("Bunyan", "6.0.x");
 				put("Judson", "7.1.x");
+				put("Mueller", "7.2.x");
 				put("Newton", "6.2.x");
 				put("Paton", "6.1.x");
 				put("Wilberforce", "7.0.x");

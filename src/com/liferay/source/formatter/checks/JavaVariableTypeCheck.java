@@ -14,10 +14,10 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaTerm;
@@ -35,13 +35,8 @@ import java.util.regex.Pattern;
 public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
-	}
-
-	public void setImmutableFieldTypes(String immutableFieldTypes) {
-		_immutableFieldTypes = ListUtil.fromString(
-			immutableFieldTypes, StringPool.COMMA);
 	}
 
 	@Override
@@ -95,7 +90,7 @@ public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 			JavaClass parentJavaClass = javaClass.getParentJavaClass();
 
 			if ((parentJavaClass == null) && !javaVariable.isStatic() &&
-				(_isImmutableField(fieldType) ||
+				(_isImmutableField(fieldType, absolutePath) ||
 				 fieldType.matches("Pattern(\\[\\])*") ||
 				 (fieldType.equals("Log") &&
 				  !isExcludedPath(_STATIC_LOG_EXCLUDES, absolutePath)))) {
@@ -338,8 +333,11 @@ public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 		return true;
 	}
 
-	private boolean _isImmutableField(String fieldType) {
-		for (String immutableFieldType : _immutableFieldTypes) {
+	private boolean _isImmutableField(String fieldType, String absolutePath) {
+		List<String> immutableFieldTypes = getAttributeValues(
+			_IMMUTABLE_FIELD_TYPES_KEY, absolutePath);
+
+		for (String immutableFieldType : immutableFieldTypes) {
 			if (fieldType.equals(immutableFieldType) ||
 				fieldType.startsWith(immutableFieldType + "[]")) {
 
@@ -350,10 +348,12 @@ public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 		return false;
 	}
 
+	private static final String _IMMUTABLE_FIELD_TYPES_KEY =
+		"immutableFieldTypes";
+
 	private static final String _STATIC_LOG_EXCLUDES = "static.log.excludes";
 
 	private List<String> _annotationsExclusions;
 	private Map<String, String> _defaultPrimitiveValues;
-	private List<String> _immutableFieldTypes = new ArrayList<>();
 
 }

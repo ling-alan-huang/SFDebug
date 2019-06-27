@@ -15,8 +15,8 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 public class LanguageKeysCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -78,7 +78,8 @@ public class LanguageKeysCheck extends BaseFileCheck {
 			return;
 		}
 
-		Properties portalLanguageProperties = _getPortalLanguageProperties();
+		Properties portalLanguageProperties = _getPortalLanguageProperties(
+			absolutePath);
 
 		if (portalLanguageProperties.isEmpty()) {
 			return;
@@ -150,7 +151,7 @@ public class LanguageKeysCheck extends BaseFileCheck {
 
 				if (bndSettings != null) {
 					Properties bndLanguageProperties =
-						_getBNDLanguageProperties(bndSettings);
+						bndSettings.getLanguageProperties();
 
 					if ((bndLanguageProperties == null) ||
 						bndLanguageProperties.containsKey(languageKey)) {
@@ -163,17 +164,6 @@ public class LanguageKeysCheck extends BaseFileCheck {
 					fileName, "Missing language key '" + languageKey + "'");
 			}
 		}
-	}
-
-	private Properties _getBNDLanguageProperties(BNDSettings bndSettings)
-		throws IOException {
-
-		Properties bndFileLanguageProperties =
-			bndSettings.getLanguageProperties();
-
-		putBNDSettings(bndSettings);
-
-		return bndFileLanguageProperties;
 	}
 
 	private Properties _getBuildGradleLanguageProperties(String absolutePath)
@@ -363,9 +353,8 @@ public class LanguageKeysCheck extends BaseFileCheck {
 						if (match.startsWith("names")) {
 							return StringUtil.split(languageKey);
 						}
-						else {
-							return new String[] {languageKey};
-						}
+
+						return new String[] {languageKey};
 					}
 
 					sb.append(match.charAt(i));
@@ -485,7 +474,8 @@ public class LanguageKeysCheck extends BaseFileCheck {
 		return null;
 	}
 
-	private synchronized Properties _getPortalLanguageProperties()
+	private synchronized Properties _getPortalLanguageProperties(
+			String absolutePath)
 		throws IOException {
 
 		if (_portalLanguageProperties != null) {
@@ -495,7 +485,7 @@ public class LanguageKeysCheck extends BaseFileCheck {
 		_portalLanguageProperties = new Properties();
 
 		String portalLanguagePropertiesContent = getPortalContent(
-			"portal-impl/src/content/Language.properties");
+			"portal-impl/src/content/Language.properties", absolutePath);
 
 		if (portalLanguagePropertiesContent == null) {
 			return _portalLanguageProperties;
@@ -512,7 +502,7 @@ public class LanguageKeysCheck extends BaseFileCheck {
 			"^apply[ \t]+plugin[ \t]*:[ \t]+\"com.liferay.lang.merger\"$",
 			Pattern.MULTILINE);
 	private static final Pattern _mergeLangPattern = Pattern.compile(
-		"mergeLang \\{\\s*sourceDirs = \\[(.*?)\\]", Pattern.DOTALL);
+		"mergeLang \\{.*sourceDirs = \\[(.*?)\\]", Pattern.DOTALL);
 	private static final Pattern _metaAnnotationDescriptionParameterPattern =
 		Pattern.compile(
 			"@Meta\\.(?:AD|OCD)\\([^\\{]*?description\\s*=\\s*\"(.+?)\"");

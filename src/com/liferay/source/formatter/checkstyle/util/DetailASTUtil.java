@@ -15,9 +15,9 @@
 package com.liferay.source.formatter.checkstyle.util;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.FullIdent;
@@ -73,20 +73,19 @@ public class DetailASTUtil {
 		DetailAST siblingDetailAST = rootDetailAST.getNextSibling();
 
 		while (true) {
-			if (siblingDetailAST.getType() == TokenTypes.IMPORT) {
-				FullIdent importIdent = FullIdent.createFullIdentBelow(
-					siblingDetailAST);
+			if ((siblingDetailAST == null) ||
+				(siblingDetailAST.getType() != TokenTypes.IMPORT)) {
 
-				importNamesList.add(importIdent.getText());
+				return importNamesList;
 			}
-			else {
-				break;
-			}
+
+			FullIdent importIdent = FullIdent.createFullIdentBelow(
+				siblingDetailAST);
+
+			importNamesList.add(importIdent.getText());
 
 			siblingDetailAST = siblingDetailAST.getNextSibling();
 		}
-
-		return importNamesList;
 	}
 
 	public static List<DetailAST> getMethodCalls(

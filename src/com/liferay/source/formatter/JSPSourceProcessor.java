@@ -74,14 +74,14 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 
 		if (deletedContentsMap.isEmpty()) {
 			return JSPSourceUtil.addIncludedAndReferencedFileNames(
-				fileNames, new HashSet<String>(), contentsMap, true);
+				fileNames, new HashSet<String>(), contentsMap, ".*");
 		}
 
 		contentsMap.putAll(deletedContentsMap);
 		fileNames.addAll(deletedContentsMap.keySet());
 
 		fileNames = JSPSourceUtil.addIncludedAndReferencedFileNames(
-			fileNames, new HashSet<String>(), contentsMap, true);
+			fileNames, new HashSet<String>(), contentsMap, ".*");
 
 		fileNames.removeAll(deletedContentsMap.keySet());
 
@@ -152,8 +152,6 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 		_checkstyleConfiguration = CheckstyleUtil.getConfiguration(
 			"checkstyle-alloy-mvc.xml", getPropertiesMap(),
 			sourceFormatterArgs);
-
-		setCheckstyleConfiguration(_checkstyleConfiguration);
 	}
 
 	private Map<String, String> _getDeletedContentsMap(String[] excludes)
@@ -224,7 +222,7 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 		_sourceFormatterMessages.addAll(
 			processCheckstyle(
 				_checkstyleConfiguration, _checkstyleLogger,
-				_ungeneratedFiles.toArray(new File[_ungeneratedFiles.size()])));
+				_ungeneratedFiles.toArray(new File[0])));
 
 		for (File ungeneratedFile : _ungeneratedFiles) {
 			Files.deleteIfExists(ungeneratedFile.toPath());

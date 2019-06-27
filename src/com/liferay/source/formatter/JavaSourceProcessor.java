@@ -16,8 +16,10 @@ package com.liferay.source.formatter;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.tools.java.parser.JavaParser;
 import com.liferay.source.formatter.checkstyle.util.CheckstyleLogger;
 import com.liferay.source.formatter.checkstyle.util.CheckstyleUtil;
+import com.liferay.source.formatter.util.DebugUtil;
 
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
@@ -74,9 +76,31 @@ public class JavaSourceProcessor extends BaseSourceProcessor {
 	}
 
 	@Override
+	protected String parse(
+			File file, String fileName, String content,
+			Set<String> modifiedMessages)
+		throws Exception {
+
+		SourceFormatterArgs sourceFormatterArgs = getSourceFormatterArgs();
+
+		String newContent = JavaParser.parse(
+			file, content, sourceFormatterArgs.getMaxLineLength(), false);
+
+		if (!content.equals(newContent)) {
+			modifiedMessages.add(file.toString() + " (JavaParser)");
+
+			if (sourceFormatterArgs.isShowDebugInformation()) {
+				DebugUtil.printContentModifications(
+					"JavaParser", fileName, content, newContent);
+			}
+		}
+
+		return newContent;
+	}
+
+	@Override
 	protected void postFormat() throws CheckstyleException {
-		_processCheckstyle(
-			_ungeneratedFiles.toArray(new File[_ungeneratedFiles.size()]));
+		_processCheckstyle(_ungeneratedFiles.toArray(new File[0]));
 
 		_ungeneratedFiles.clear();
 
@@ -99,8 +123,6 @@ public class JavaSourceProcessor extends BaseSourceProcessor {
 			sourceFormatterArgs.getBaseDirName());
 		_checkstyleConfiguration = CheckstyleUtil.getConfiguration(
 			"checkstyle.xml", getPropertiesMap(), sourceFormatterArgs);
-
-		setCheckstyleConfiguration(_checkstyleConfiguration);
 	}
 
 	private String[] _getPluginExcludes(String pluginDirectoryName) {
@@ -171,9 +193,7 @@ public class JavaSourceProcessor extends BaseSourceProcessor {
 			"**/model/BaseModel.java", "**/model/impl/BaseModelImpl.java",
 			"**/portal-test/**/portal/service/**/*.java",
 			"**/portal-test-integration/**/portal/service/**/*.java",
-			"**/service/Base*.java",
-			"**/service/PersistedModelLocalService*.java",
-			"**/service/configuration/**/*.java",
+			"**/service/*.java", "**/service/configuration/**/*.java",
 			"**/service/http/*HttpTest.java", "**/service/http/*SoapTest.java",
 			"**/service/http/TunnelUtil.java", "**/service/impl/*.java",
 			"**/service/jms/*.java", "**/service/permission/*.java",
@@ -196,8 +216,7 @@ public class JavaSourceProcessor extends BaseSourceProcessor {
 		_ungeneratedFiles.add(file);
 
 		if (_ungeneratedFiles.size() == CheckstyleUtil.BATCH_SIZE) {
-			_processCheckstyle(
-				_ungeneratedFiles.toArray(new File[_ungeneratedFiles.size()]));
+			_processCheckstyle(_ungeneratedFiles.toArray(new File[0]));
 
 			_ungeneratedFiles.clear();
 		}

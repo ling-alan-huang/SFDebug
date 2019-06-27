@@ -14,10 +14,10 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -130,6 +130,16 @@ public class GradleIndentationCheck extends BaseFileCheck {
 			text.matches("^\\s*Pattern\\s+.*")) {
 
 			return tabCount;
+		}
+
+		if (text.contains(" ==~ /")) {
+			int x = text.indexOf(" ==~ /");
+
+			int y = text.indexOf("/", x + 6);
+
+			if (y != -1) {
+				text = text.substring(0, x) + text.substring(y + 1);
+			}
 		}
 
 		tabCount += getLevel(text, "([{", "}])");

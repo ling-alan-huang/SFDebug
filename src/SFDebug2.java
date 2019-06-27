@@ -24,47 +24,49 @@ import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 public class SFDebug2 {
 
 	public static void main(String[] args) throws Exception {
-		//String baseDirName = "C:/github/liferay-portal/";
-		//String baseDirName = "C:/github/liferay-portal/util-java/";
-		//String baseDirName = "C:/github/liferay-portal/util-slf4j/";
-		//String baseDirName = "C:/github/liferay-portal/portal-impl/";
-		//String baseDirName = "C:/github/liferay-portal/portal-impl/src/com/liferay/portal/service/";
-		//String baseDirName = "C:/github/liferay-portal/portal-kernel/";
 
-		//String baseDirName = "C:/github/liferay-portal-ee-7.0.x/";
-		//String baseDirName = "C:/github/liferay-portal-ee-7.1.x/";
-		//String baseDirName = "C:/github/liferay-portal-ee-7.1.x/portal-impl/";
-		//String baseDirName = "C:/github/liferay-portal/modules/util/source-formatter/";
-		//String baseDirName = "C:/github/liferay-portal/modules/util/portal-tools-java-parser/";
-		//String baseDirName = "C:/github/liferay-portal/modules/etl/";
-		//String baseDirName = "C:/github/liferay-portal/modules/test/jenkins-results-parser/";
-		//String baseDirName = "C:/github/liferay-portal/modules/";
-		//String baseDirName = "C:/github/liferay-portal/modules/apps/";
-		//String baseDirName = "C:/github/liferay-portal/modules/util/portal-tools-service-builder-test-test/";
-		//String baseDirName = "C:/github/liferay-portal/modules/apps/asset/";
-		//String baseDirName = "C:/github/liferay-portal/modules/apps/data-engine/";
-		//String baseDirName = "C:/github/liferay-portal/modules/sdk/";
-		//String baseDirName = "C:/LiferayBundles/liferay-portal-src-7.0-ce-ga1/";
-		//String baseDirName = "C:/github/liferay-portal/modules/aspectj/";
-		//String baseDirName = "C:/github/liferay-portal-ee-7.1.x/portal-impl/";
-		//String baseDirName = "C:/github/liferay-portal-ee-7.1.x/modules/apps/apio-architect/";
-		//String baseDirName = "/home/alan/liferay_code/master/liferay-portal/";
-//		String baseDirName = "/home/alan/liferay_code/master/liferay-portal/modules/apps/headless-apio/";
-		String baseDirName = "/home/alan/liferay_code/master/liferay-portal/modules/apps/layout/layout-admin-web/src/main/resources/META-INF/resources/";
-		//String baseDirName = "C:/github/liferay-portal/modules/core/petra/";
-		//String baseDirName = "C:/github/liferay-portal/modules/util/";
-		//String baseDirName = "C:/github/liferay-portal/modules/core/petra/";
+		String baseDirName = "/home/alan/liferay_code/master/liferay-portal/";
+//		String baseDirName = "/home/alan/liferay_code/master/liferay-portal/portal-web/test/functional/";
+//		String baseDirName = "/home/alan/liferay_code/master/liferay-portal/modules/apps/calendar/calendar-web/src/main/resources/META-INF/resources/asset/";
+//		String baseDirName = "/home/alan/liferay_code/master/liferay-portal/modules/apps/headless/headless-foundation/headless-foundation-impl/";
+//		String baseDirName = "/home/alan/liferay_code/master/liferay-portal/modules/apps/analytics/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-osb-asah-private/";
+		// ■Master
+//		String baseDirName = "/home/alan/liferay_code/master/liferay-portal/";
+		// ■Master-Private
+//		String baseDirName = "/home/alan/liferay_code/7.0.x/master-private/modules/private/";
+		// ■7.2.x
+//		String baseDirName = "/home/alan/liferay_code/7.0.x/7.2.x-liferay-portal-ee/";
+		// ■7.1.x
+//		String baseDirName = "/home/alan/liferay_code/7.0.x/7.1.x-liferay-portal-ee/";
+		// ■7.1.x-Private
+//		String baseDirName = "/home/alan/liferay_code/7.0.x/7.1.x-private/modules/private";
+		// ■7.0.x
+//		String baseDirName = "/home/alan/liferay_code/7.0.x/liferay-portal-ee/";
+		// ■7.0.x-Private
+//		String baseDirName = "/home/alan/liferay_code/7.0.x/7.0.x-private/modules/private";
 
-		//String baseDirName = "C:/github/com-liferay-commerce/";
-		//String baseDirName = "C:/github/liferay-portal-ee-7.0.x/modules/apps/wsrp/";
+		// ■Sub-Repos
+//		String baseDirName = "/home/alan/liferay_code/liferay-jenkins-ee/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-apio-architect/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-commerce/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-commerce-private/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-osb-asah-private/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-osb-cerebro-private/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-osb-customer-private/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-osb-faro-private/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-osb-lcs-private/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-osb-loop-private/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-osb-testray-private/";
+//		String baseDirName = "/home/alan/liferay_code/com-liferay-poshi-runner/";
 
-		//String baseDirName = "C:/github/liferay-ide-master/";
-
-		//String baseDirName = "C:/checkstyle-checkstyle-8.11/";
-
+		// ■
 		_runFormatter(baseDirName);
-		//_runFormatterDirs();
-		//_runFormatterSubrepos();
+		
+		// ■Repos
+//		_runFormatterDirs();
+		// ■Sub-Repos
+//		_runFormatterSubrepos();
 		//_runFormatterPrivateRepos();
 	}
 
@@ -74,31 +76,40 @@ public class SFDebug2 {
 		SourceFormatterArgs sourceFormatterArgs = new SourceFormatterArgs();
 
 		sourceFormatterArgs.setAutoFix(true);
+//		sourceFormatterArgs.setAutoFix(false);
+		
+		
 		sourceFormatterArgs.setBaseDirName(baseDirName);
 		sourceFormatterArgs.setPrintErrors(true);
 		sourceFormatterArgs.setThrowException(false);
 		sourceFormatterArgs.setMaxLineLength(80);
+		
+//		sourceFormatterArgs.setThrowException(true);
 
 		//sourceFormatterArgs.setFormatCurrentBranch(true);
 
 		//sourceFormatterArgs.setShowDebugInformation(true);
 		//sourceFormatterArgs.setIncludeSubrepositories(true);
 
-		//sourceFormatterArgs.setCheckName("AnnotationParameterOrderCheck");
+//		sourceFormatterArgs.setCheckName("BNDImportsCheck");
 		//sourceFormatterArgs.setCheckName("IndentationCheck");
-	//	sourceFormatterArgs.setCheckName("JSPJavaScriptSemicolonCheck");
-			sourceFormatterArgs.setCheckName("JSPStylingCheck");
+//		sourceFormatterArgs.setCheckName("JSONScriptsCheck");
+//			sourceFormatterArgs.setCheckName("PoshiParametersOrderCheck");
+//		sourceFormatterArgs.setCheckName("PoshiStylingCheck");
+//		sourceFormatterArgs.setCheckName("HTMLEmptyLinesCheck");
 
-		//String fn = "src/com/liferay/counter/service/persistence/impl/CounterFinderImpl.java";
-		String fn = "change-tracking-my-change-lists-web/src/main/java/com/liferay/change/tracking/my/change/lists/web/internal/application/list/MyChangeListsPanelApp.java";
+//		String fn = "headless-delivery/headless-delivery-impl/rest-openapi.yaml";
+//		String fn = "source-formatter.properties";
+		String fn = "build.properties";
+//		String fn = "ConfigurationAdminBundleActivator.java";
 		//String fn = "src/com/liferay/portal/internal/servlet/MainServlet.java";
-		//String fn = "modules/aps//document-library/document-library-content-service/src/main/java/com/liferay/document/library/content/internal/service/ModularDLContentLocalServiceWrapper.java";
-
-		//sourceFormatterArgs = _setRecentChangesFileNames(sourceFormatterArgs, StringUtil.replace(fn, "\\", "/"));
+//		String fn = "modules/aps//document-library/document-library-content-service/src/main/java/com/liferay/document/library/content/internal/service/ModularDLContentLocalServiceWrapper.java";
+//■
+		sourceFormatterArgs = _setRecentChangesFileNames(sourceFormatterArgs, StringUtil.replace(fn, "\\", "/"), baseDirName);
 
 		SourceFormatter sourceFormatter = new SourceFormatter(sourceFormatterArgs);
 
-		System.out.println("Start formatting on " + baseDirName);
+		System.out.println("■Start formatting on " + baseDirName);
 
 		try {
 			sourceFormatter.format();
@@ -146,13 +157,27 @@ public class SFDebug2 {
 	private static void _runFormatterDirs() throws Exception {
 		List<String> baseDirNames = new ArrayList<>();
 
-		baseDirNames.add("C:/github/liferay-portal/modules/apps/portal/");
-		baseDirNames.add("C:/github/liferay-portal/modules/apps/server/");
-		baseDirNames.add("C:/github/liferay-portal/modules/apps/site-navigation/");
-		baseDirNames.add("C:/github/liferay-portal/modules/apps/static/");
-		baseDirNames.add("C:/github/liferay-portal/modules/apps/subscription/");
-		baseDirNames.add("C:/github/liferay-portal/modules/apps/upload/");
-		baseDirNames.add("C:/github/liferay-portal/modules/apps/users-admin/");
+//		// ■Master
+		baseDirNames.add("/home/alan/liferay_code/master/liferay-portal/");
+//		// ■Master-Private
+		baseDirNames.add("/home/alan/liferay_code/7.0.x/master-private/modules/private/");
+//		// ■7.1.x
+		baseDirNames.add("/home/alan/liferay_code/7.0.x/7.1.x-liferay-portal-ee/");
+//		// ■7.1.x-Private
+		baseDirNames.add("/home/alan/liferay_code/7.0.x/7.1.x-private/modules/private");
+//		// ■7.0.x
+		baseDirNames.add("/home/alan/liferay_code/7.0.x/liferay-portal-ee/");
+//		// ■7.0.x-Private
+		baseDirNames.add("/home/alan/liferay_code/7.0.x/7.0.x-private/modules/private");
+//
+		
+//		baseDirNames.add("C:/github/liferay-portal/modules/apps/portal/");
+//		baseDirNames.add("C:/github/liferay-portal/modules/apps/server/");
+//		baseDirNames.add("C:/github/liferay-portal/modules/apps/site-navigation/");
+//		baseDirNames.add("C:/github/liferay-portal/modules/apps/static/");
+//		baseDirNames.add("C:/github/liferay-portal/modules/apps/subscription/");
+//		baseDirNames.add("C:/github/liferay-portal/modules/apps/upload/");
+//		baseDirNames.add("C:/github/liferay-portal/modules/apps/users-admin/");
 
 		for (String baseDirName : baseDirNames) {
 			_runFormatter(baseDirName);
@@ -162,20 +187,20 @@ public class SFDebug2 {
 	private static void _runFormatterSubrepos() throws Exception {
 		List<String> baseDirNames = new ArrayList<>();
 
-		baseDirNames.add("C:/github/com-liferay-apio-architect/");
-		//baseDirNames.add("C:/github/com-liferay-poshi-runner/");
-
-		//baseDirNames.add("C:/github/com-liferay-osb-cerebro-private/");
-		//baseDirNames.add("C:/github/com-liferay-osb-customer-private/");
-		//baseDirNames.add("C:/github/com-liferay-osb-faro-private/");
-		//baseDirNames.add("C:/github/com-liferay-osb-lcs-private/");
-		//baseDirNames.add("C:/github/com-liferay-osb-loop-private/");
-		//baseDirNames.add("C:/github/com-liferay-osb-pulpo-engine-assets-private/");
-		//baseDirNames.add("C:/github/com-liferay-osb-pulpo-engine-contacts-deployment-private/");
-		//baseDirNames.add("C:/github/com-liferay-osb-pulpo-engine-contacts-private/");
-		//baseDirNames.add("C:/github/com-liferay-osb-testray-private/");
-		//baseDirNames.add("C:/github/com-liferay-pulpo-connector-de-private/");
-
+		// ■Sub-Repos
+		baseDirNames.add("/home/alan/liferay_code/liferay-jenkins-ee/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-apio-architect/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-commerce/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-commerce-private/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-osb-asah-private/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-osb-cerebro-private/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-osb-customer-private/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-osb-faro-private/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-osb-lcs-private/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-osb-loop-private/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-osb-testray-private/");
+		baseDirNames.add("/home/alan/liferay_code/com-liferay-poshi-runner/");
+		
 		for (String baseDirName : baseDirNames) {
 			_runFormatter(baseDirName);
 		}
@@ -288,32 +313,33 @@ public class SFDebug2 {
 	}
 
 	private static SourceFormatterArgs _setRecentChangesFileNames(
-		SourceFormatterArgs sourceFormatterArgs, String fileName) {
+		SourceFormatterArgs sourceFormatterArgs, String fileName, String baseDirName) {
 
 		List<String> fileNames = new ArrayList<>();
 
 		fileNames.add(fileName);
 
-		sourceFormatterArgs.setRecentChangesFileNames(fileNames);
+//		sourceFormatterArgs.setRecentChangesFileNames(fileNames);
+		sourceFormatterArgs.addRecentChangesFileNames(fileNames, baseDirName);
 
 		return sourceFormatterArgs;
 	}
 
-	private static SourceFormatterArgs _setCurrentBranch(
-			SourceFormatterArgs sourceFormatterArgs)
-		throws Exception {
-
-		sourceFormatterArgs.setFormatCurrentBranch(true);
-
-		sourceFormatterArgs.setGitWorkingBranchName("master");
-
-		sourceFormatterArgs.setRecentChangesFileNames(
-			getCurrentBranchFileNames(
-				sourceFormatterArgs.getBaseDirName(),
-				sourceFormatterArgs.getGitWorkingBranchName()));
-
-		return sourceFormatterArgs;
-	}
+//	private static SourceFormatterArgs _setCurrentBranch(
+//			SourceFormatterArgs sourceFormatterArgs)
+//		throws Exception {
+//
+//		sourceFormatterArgs.setFormatCurrentBranch(true);
+//
+//		sourceFormatterArgs.setGitWorkingBranchName("master");
+//
+//		sourceFormatterArgs.setRecentChangesFileNames(
+//			getCurrentBranchFileNames(
+//				sourceFormatterArgs.getBaseDirName(),
+//				sourceFormatterArgs.getGitWorkingBranchName()));
+//
+//		return sourceFormatterArgs;
+//	}
 
 	private static String _createRegex(String s) {
 		if (!s.startsWith("**/")) {

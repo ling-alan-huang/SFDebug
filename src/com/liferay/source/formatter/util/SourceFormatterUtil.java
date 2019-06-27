@@ -15,10 +15,9 @@
 package com.liferay.source.formatter.util;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
@@ -29,6 +28,8 @@ import com.liferay.source.formatter.checks.util.SourceUtil;
 
 import java.io.File;
 import java.io.IOException;
+
+import java.net.URL;
 
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -42,10 +43,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -58,6 +57,12 @@ public class SourceFormatterUtil {
 
 	public static final String GIT_LIFERAY_PORTAL_BRANCH =
 		"git.liferay.portal.branch";
+
+	public static final String GIT_LIFERAY_PORTAL_URL =
+		"https://raw.githubusercontent.com/liferay/liferay-portal/";
+
+	public static final String SOURCE_FORMATTER_TEST_PATH =
+		"/source/formatter/dependencies/";
 
 	public static List<String> filterFileNames(
 		List<String> allFileNames, String[] excludes, String[] includes,
@@ -153,10 +158,8 @@ public class SourceFormatterUtil {
 	}
 
 	public static List<String> filterRecentChangesFileNames(
-			String baseDirName, List<String> recentChangesFileNames,
-			String[] excludes, String[] includes,
-			SourceFormatterExcludes sourceFormatterExcludes,
-			boolean includeSubrepositories)
+			Set<String> recentChangesFileNames, String[] excludes,
+			String[] includes, SourceFormatterExcludes sourceFormatterExcludes)
 		throws IOException {
 
 		if (ArrayUtil.isEmpty(includes)) {
@@ -167,54 +170,7 @@ public class SourceFormatterUtil {
 			excludes, includes, sourceFormatterExcludes);
 
 		return _filterRecentChangesFileNames(
-			baseDirName, recentChangesFileNames, pathMatchers);
-	}
-
-	public static List<String> getAttributeNames(
-		CheckType checkType, String checkName,
-		Map<String, Properties> propertiesMap) {
-
-		checkName = checkName.replaceAll("([a-z])([A-Z])", "$1.$2");
-
-		checkName = checkName.replaceAll("([A-Z])([A-Z][a-z])", "$1.$2");
-
-		String keyPrefix = StringUtil.toLowerCase(checkName) + ".";
-
-		if (checkType != null) {
-			String checkTypeName = checkType.getValue();
-
-			checkTypeName = checkTypeName.replaceAll("([a-z])([A-Z])", "$1.$2");
-
-			checkTypeName = checkTypeName.replaceAll(
-				"([A-Z])([A-Z][a-z])", "$1.$2");
-
-			keyPrefix = StringUtil.toLowerCase(checkTypeName) + "." + keyPrefix;
-		}
-
-		Set<String> attributeNames = new HashSet<>();
-
-		for (Map.Entry<String, Properties> entry : propertiesMap.entrySet()) {
-			Properties properties = entry.getValue();
-
-			for (Object key : properties.keySet()) {
-				String s = (String)key;
-
-				if (s.startsWith(keyPrefix)) {
-					String attributeName = StringUtil.replaceFirst(
-						s, keyPrefix, StringPool.BLANK);
-
-					attributeNames.add(attributeName);
-				}
-			}
-		}
-
-		return ListUtil.fromCollection(attributeNames);
-	}
-
-	public static List<String> getAttributeNames(
-		String checkName, Map<String, Properties> propertiesMap) {
-
-		return getAttributeNames(null, checkName, propertiesMap);
+			recentChangesFileNames, pathMatchers);
 	}
 
 	public static File getFile(String baseDirName, String fileName, int level) {
@@ -231,65 +187,50 @@ public class SourceFormatterUtil {
 		return null;
 	}
 
-	public static String getPropertyValue(
-		String attributeName, CheckType checkType, String checkName,
-		Map<String, Properties> propertiesMap) {
+	public static String getGitContent(String fileName, String branchName)
+		throws IOException {
 
-		checkName = checkName.replaceAll("([a-z])([A-Z])", "$1.$2");
+		URL url = getPortalGitURL(fileName, branchName);
 
-		checkName = checkName.replaceAll("([A-Z])([A-Z][a-z])", "$1.$2");
-
-		String key = StringBundler.concat(
-			StringUtil.toLowerCase(checkName), ".", attributeName);
-
-		if (checkType != null) {
-			String checkTypeName = checkType.getValue();
-
-			checkTypeName = checkTypeName.replaceAll("([a-z])([A-Z])", "$1.$2");
-
-			checkTypeName = checkTypeName.replaceAll(
-				"([A-Z])([A-Z][a-z])", "$1.$2");
-
-			key = StringUtil.toLowerCase(checkTypeName) + "." + key;
+		if (url == null) {
+			return null;
 		}
 
-		return getPropertyValue(key, propertiesMap);
+		try {
+			return StringUtil.read(url.openStream());
+		}
+		catch (IOException ioe) {
+			return null;
+		}
 	}
 
-	public static String getPropertyValue(
-		String propertyName, Map<String, Properties> propertiesMap) {
+	public static File getPortalDir(String baseDirName) {
+		File portalImplDir = getFile(
+			baseDirName, "portal-impl", ToolsUtil.PORTAL_MAX_DIR_LEVEL);
 
-		StringBundler sb = new StringBundler(propertiesMap.size() * 2);
-
-		for (Map.Entry<String, Properties> entry : propertiesMap.entrySet()) {
-			Properties properties = entry.getValue();
-
-			String value = properties.getProperty(propertyName);
-
-			if (value == null) {
-				continue;
-			}
-
-			if (Validator.isBoolean(value) || Validator.isNumber(value)) {
-				return value;
-			}
-
-			sb.append(value);
-			sb.append(CharPool.COMMA);
+		if (portalImplDir == null) {
+			return null;
 		}
 
-		if (sb.index() > 0) {
-			sb.setIndex(sb.index() - 1);
-		}
-
-		return sb.toString();
+		return portalImplDir.getParentFile();
 	}
 
-	public static String getPropertyValue(
-		String attributeName, String checkName,
-		Map<String, Properties> propertiesMap) {
+	public static URL getPortalGitURL(
+		String fileName, String portalBranchName) {
 
-		return getPropertyValue(attributeName, null, checkName, propertiesMap);
+		if (Validator.isNull(portalBranchName)) {
+			return null;
+		}
+
+		try {
+			return new URL(
+				StringBundler.concat(
+					SourceFormatterUtil.GIT_LIFERAY_PORTAL_URL,
+					portalBranchName, StringPool.SLASH, fileName));
+		}
+		catch (Exception e) {
+			return null;
+		}
 	}
 
 	public static String getSimpleName(String name) {
@@ -412,16 +353,13 @@ public class SourceFormatterUtil {
 	}
 
 	private static List<String> _filterRecentChangesFileNames(
-			String baseDirName, List<String> recentChangesFileNames,
-			PathMatchers pathMatchers)
+			Set<String> recentChangesFileNames, PathMatchers pathMatchers)
 		throws IOException {
 
 		List<String> fileNames = new ArrayList<>();
 
 		recentChangesFileNamesLoop:
 		for (String fileName : recentChangesFileNames) {
-			fileName = baseDirName.concat(fileName);
-
 			File file = new File(fileName);
 
 			File canonicalFile = file.getCanonicalFile();

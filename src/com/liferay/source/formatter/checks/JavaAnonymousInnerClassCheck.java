@@ -15,7 +15,7 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.parser.JavaClass;
@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 public class JavaAnonymousInnerClassCheck extends BaseJavaTermCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -216,37 +216,13 @@ public class JavaAnonymousInnerClassCheck extends BaseJavaTermCheck {
 		return parameterNames;
 	}
 
-	private List<String> _getVariableNames(String content) {
-		List<String> variableNames = new ArrayList<>();
-
-		int x = content.indexOf("{\n");
-
-		Matcher matcher = _variableDeclarationPattern.matcher(content);
-
-		while (matcher.find()) {
-			if (matcher.start() < x) {
-				continue;
-			}
-
-			String s = StringUtil.trim(matcher.group(1));
-
-			if (!s.equals("break") && !s.equals("continue") &&
-				!s.equals("return") && !s.equals("throw")) {
-
-				variableNames.add(matcher.group(3));
-			}
-		}
-
-		return variableNames;
-	}
-
 	private boolean _hasDuplicateParameterOrVariableName(
 		String fileName, String anonymousClassContent,
 		JavaMethod anonymousClassJavaMethod, JavaTerm javaTerm) {
 
 		List<String> parameterNames = _getParameterNames(
 			anonymousClassJavaMethod);
-		List<String> variableNames = _getVariableNames(anonymousClassContent);
+		List<String> variableNames = getVariableNames(anonymousClassContent);
 
 		if (parameterNames.isEmpty() && variableNames.isEmpty()) {
 			return false;
@@ -345,8 +321,5 @@ public class JavaAnonymousInnerClassCheck extends BaseJavaTermCheck {
 
 		return false;
 	}
-
-	private static final Pattern _variableDeclarationPattern = Pattern.compile(
-		"((\t\\w|\\()[\\w<>,\\s]+?)\\s(\\w+)( =\\s|;)");
 
 }

@@ -18,13 +18,10 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -34,9 +31,9 @@ import java.util.Properties;
  */
 public class PropertiesLanguageKeysCheck extends BaseFileCheck {
 
-	public void setAllowedLanguageKeys(String allowedLanguageKeys) {
-		Collections.addAll(
-			_allowedLanguageKeys, StringUtil.split(allowedLanguageKeys));
+	@Override
+	public boolean isLiferaySourceCheck() {
+		return true;
 	}
 
 	@Override
@@ -82,7 +79,7 @@ public class PropertiesLanguageKeysCheck extends BaseFileCheck {
 					}
 				}
 
-				if (!_isAllowedLanguageKey(key) &&
+				if (!_isAllowedLanguageKey(key, absolutePath) &&
 					value.matches("(?s).*<([a-zA-Z0-9]+)[^>]*>.*?<\\/\\1>.*")) {
 
 					addMessage(
@@ -119,7 +116,7 @@ public class PropertiesLanguageKeysCheck extends BaseFileCheck {
 		Properties portalImplLanguageProperties = new Properties();
 
 		InputStream inputStream = getPortalInputStream(
-			_PORTAL_IMPL_LANGUAGE_PROPERTIES_FILE_NAME);
+			_PORTAL_IMPL_LANGUAGE_PROPERTIES_FILE_NAME, absolutePath);
 
 		if (inputStream != null) {
 			portalImplLanguageProperties.load(inputStream);
@@ -130,10 +127,13 @@ public class PropertiesLanguageKeysCheck extends BaseFileCheck {
 		return _portalImplLanguageProperties;
 	}
 
-	private boolean _isAllowedLanguageKey(String key) {
+	private boolean _isAllowedLanguageKey(String key, String absolutePath) {
 		String s = key.replaceAll("[^\\w.-]", StringPool.BLANK);
 
-		for (String allowedLanguageKey : _allowedLanguageKeys) {
+		List<String> allowedLanguageKeys = getAttributeValues(
+			_ALLOWED_LANGUAGE_KEYS_KEY, absolutePath);
+
+		for (String allowedLanguageKey : allowedLanguageKeys) {
 			if (s.equals(allowedLanguageKey)) {
 				return true;
 			}
@@ -142,10 +142,12 @@ public class PropertiesLanguageKeysCheck extends BaseFileCheck {
 		return false;
 	}
 
+	private static final String _ALLOWED_LANGUAGE_KEYS_KEY =
+		"allowedLanguageKeys";
+
 	private static final String _PORTAL_IMPL_LANGUAGE_PROPERTIES_FILE_NAME =
 		"portal-impl/src/content/Language.properties";
 
-	private final List<String> _allowedLanguageKeys = new ArrayList<>();
 	private Properties _portalImplLanguageProperties;
 
 }

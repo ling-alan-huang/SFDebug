@@ -16,6 +16,7 @@ package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
@@ -45,8 +46,8 @@ public abstract class EmptyLinesCheck extends BaseFileCheck {
 			String tagName2 = matcher.group(5);
 
 			if (tagName1.endsWith(":when") ||
-				(tagName1.matches("dd|dt|li|span|td|th|tr") &&
-				 tagName2.matches("dd|dt|li|span|td|th|tr"))) {
+				(ArrayUtil.contains(_STYLING_TAG_NAMES, tagName1) &&
+				 ArrayUtil.contains(_STYLING_TAG_NAMES, tagName2))) {
 
 				if (lineBreaks.equals("\n\n")) {
 					return StringUtil.replaceFirst(
@@ -68,7 +69,7 @@ public abstract class EmptyLinesCheck extends BaseFileCheck {
 
 			String tabs = SourceUtil.getIndent(line);
 
-			if (!tabs.equals(matcher.group(1))) {
+			if (!tabs.equals(matcher.group(3))) {
 				continue;
 			}
 
@@ -86,11 +87,20 @@ public abstract class EmptyLinesCheck extends BaseFileCheck {
 				continue;
 			}
 
-			int pos = trimmedLine.indexOf(CharPool.SPACE);
+			String tagName1 = matcher.group(2);
 
-			String tagName = trimmedLine.substring(1, pos);
+			if (tagName1 == null) {
+				int pos = trimmedLine.indexOf(CharPool.SPACE);
 
-			if (!tagName.equals(matcher.group(2))) {
+				tagName1 = trimmedLine.substring(1, pos);
+			}
+
+			String tagName2 = matcher.group(4);
+
+			if (!tagName1.equals(tagName2) &&
+				(!ArrayUtil.contains(_STYLING_TAG_NAMES, tagName1) ||
+				 !ArrayUtil.contains(_STYLING_TAG_NAMES, tagName2))) {
+
 				return StringUtil.replaceFirst(
 					content, "\n", "\n\n", matcher.start());
 			}
@@ -536,7 +546,8 @@ public abstract class EmptyLinesCheck extends BaseFileCheck {
 
 				String nextLine = matcher.group(1);
 
-				if (nextLine.startsWith("package ") ||
+				if (nextLine.startsWith("import ") ||
+					nextLine.startsWith("package ") ||
 					nextLine.startsWith("/*")) {
 
 					continue;
@@ -629,10 +640,14 @@ public abstract class EmptyLinesCheck extends BaseFileCheck {
 		}
 	}
 
+	private static final String[] _STYLING_TAG_NAMES = {
+		"dd", "dt", "li", "span", "td", "th", "tr"
+	};
+
 	private static final Pattern _emptyLineBetweenTagsPattern1 =
 		Pattern.compile("\n(\t*)</([-\\w:]+)>(\n*)(\t*)<([-\\w:]+)[> \n]");
 	private static final Pattern _emptyLineBetweenTagsPattern2 =
-		Pattern.compile(" />\n(\t+)<([-\\w:]+)[> \n]");
+		Pattern.compile("(\\S</(\\w+)>| />)\n(\t+)<([-\\w:]+)[> \n]");
 	private static final Pattern _emptyLineInMultiLineTagsPattern1 =
 		Pattern.compile("\n\t*<[-\\w:#]+\n\n\t*\\w");
 	private static final Pattern _emptyLineInMultiLineTagsPattern2 =
@@ -668,7 +683,7 @@ public abstract class EmptyLinesCheck extends BaseFileCheck {
 	private static final Pattern _missingEmptyLinePattern4 = Pattern.compile(
 		"[^{:/\n]\n\t*(for|if|try) [({]");
 	private static final Pattern _missingEmptyLinePattern5 = Pattern.compile(
-		"[\t\n]\\}\n[\t ]*(?!(/\\*|\\}|\\)|//|catch |else |finally |while ))" +
+		"[\t\n]\\}\n[\t ]*(?!(/?\\*|\\}|\\)|//|catch |else |finally |while ))" +
 			"\\S");
 	private static final Pattern _missingEmptyLinePattern6 = Pattern.compile(
 		"[^:\\{\\s]\n\t*(break|continue|return|throw)[ ;]");
